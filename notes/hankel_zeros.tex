@@ -1,0 +1,96 @@
+\section{Zeros of Hankel functions}
+\label{sec-hankel_zeros}
+
+The DtN map boundary condition involves things that look like
+$k\left(H_n^{(1)}\right)'(kR)/H_n^{(1)}(kR)$, for which we need
+rational approximations. Therefore we need to know the locations
+of the zeros of $\H$. 
+
+\subsection{Zeros from McMahon expansion}
+
+In Section 3 of Boro D\"oring's paper,
+it's stated that large zeros of $\H$ satisfy
+\[
+ z_s \sim \beta - \sum_{k=0}^\infty \frac{D_{2k+1}}{\beta^{2k+1}},
+ \qquad
+ \beta = \left(s + \frac{n}{2} - \frac14\right)\pi - \alpha,
+ \qquad
+ \alpha = \frac{i}{2}\ln 2
+\]
+where $s$ is an integer index (which I believe should start 
+from 1).
+
+The offensively-indexed algorithm given therein for computing
+$D_{2k+1}$ is not reproduced here lest I make a mistake.
+I came up with my own version (changed indexing, switched a
+few steps around) that was easier for me to code. 
+For $\nu = 1,2,...$
+\begin{enumerate}
+ \item $t_\nu = -\left(\nu - \frac12\right)
+                \frac{n^2 - \left(\nu-\frac12\right)^2}{\nu}
+                \cdot t_{\nu-1}; \quad t_0 = 1$
+ \item $A_\nu = -\displaystyle\sum_{\lambda=0}^{\nu-1}
+                (-1)^{\nu-\lambda} A_\lambda
+                t_{\nu-\lambda}; \quad A_0 = 1$
+ \item $Q_\nu = \displaystyle\sum_{\lambda=0}^{\nu}
+                C_{\nu-\lambda}C_\lambda; \quad C_0 = 1$
+ \item $F_\nu^{(\mu)} = F_{\nu-1}^{(\mu-1)} - 
+                        \displaystyle\sum_{\lambda=1}^{\nu-\mu}
+                        Q_\lambda F_{\nu-\lambda}^{(\mu)},
+                        \quad \mu = 1,2,...,\nu;
+                        \quad F_{\nu-1}^{(0)} = C_{\nu-1}$
+ \item $C_\nu = -\frac{A_\nu}{2\nu-1}; \quad C_0 = 1$
+ \item $D_\nu = C_\nu + \displaystyle\sum_{\lambda=1}^{\nu-1}
+                        D_\lambda F_\nu^{(\lambda)}$.
+\end{enumerate}
+The way that I coded this algorithm, I included the index 0
+terms in some of the vectors and not in others; there 
+isn't much confusion because I vectorized the sums
+involved. Just for posterity, with the new indexing
+\[
+ z_s \sim \beta - \sum_{\nu=1}^\infty
+ \frac{D_\nu}{\beta^{2\nu - 1}}.
+\]
+
+\subsection{Zeros from Olver expansion}
+
+In Section 4 of Boro D\"oring's paper, 
+approximate zeros of $\H$ are of the form
+$nt(a_se^{-2\pi i/3})$ and $-nt(b_se^{2\pi i/3})$, where
+$t$ is defined by
+\[
+ t(x) = \frac{1}{\cosh\sigma(x)}, \qquad
+ \sigma(x) - \tanh\sigma(x) = \frac23 \cdot \frac1n \cdot
+ x^{3/2} \equiv \rho(x)
+\]
+and $a_s$ and $b_s$ are the negative zeros of the
+first and second kind Airy functions, respectively.
+
+In order to compute them, I used the following 
+approximations from Wikipedia:
+\[
+ Ai(-x) 
+ \sim 
+ \frac{\sin\left(\frac23 x^{3/2} + \frac{\pi}{4}\right)}
+      {\sqrt{\pi} x^{1/4}},
+ \qquad
+ Bi(-x) 
+ \sim 
+ \frac{\cos\left(\frac23 x^{3/2} + \frac{\pi}{4}\right)}
+      {\sqrt{\pi} x^{1/4}}.
+\]
+With these,
+\[
+ a_s \approx -\left[ \frac32 \pi \left(k-\frac14\right)
+              \right]^{2/3}, 
+ \quad k > 0
+\]
+and
+\[
+ b_s \approx -\left[ \frac32 \pi \left(k+\frac14\right)
+              \right]^{2/3}, 
+ \quad k \ge 0.
+\]
+The values of $k$ are determined by needing $a_s$ and
+$b_s$ to be negative.
+

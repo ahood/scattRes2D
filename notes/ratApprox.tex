@@ -1,0 +1,82 @@
+\section{{\tt ratApprox} and {\tt ratApproxWithPoles}}
+\label{sec-ratApprox}
+
+As derived in Section~\ref{sec-rat_approx}, we can construct
+rational approximations to analytic functions. The object
+{\tt ratApprox} holds all the relevant pieces and convenience functions.
+Rational approximations to meromorphic functions are represented with
+{\tt ratApproxWithPoles} objects.
+
+\subsection{Creating a {\tt ratApprox} instance}
+
+The user has to specify a region (elliptical, for simplicity) and
+a handle for an analytic function. 
+It would make sense for the user to input some
+kind of error criterion, but for now they have the choice of giving a
+vector holding a mesh of $[0,1]$, including $0$ and $1$. This is optional
+and if no mesh is passed the default will be {\tt linspace(0,1,100)}.
+
+Creating an instance of a rational approximation to $\sin(z)$ on
+the unit disk could look like
+\begin{equation}
+\begin{aligned}
+ &{\tt >> ell = ellipse(0,0,1,1,[],[]);} \\ 
+ &{\tt >> f = @(z) sin(z);} \\ 
+ &{\tt >> ratf = ratApprox(ell,f);}
+\end{aligned}
+\end{equation}
+
+\subsection{{\tt ratApprox} properties and methods}
+
+\begin{description}
+ \item[Properties]
+   \begin{itemize}
+    \item[]
+    \item {\tt region} is an {\tt ellipse} instance (or another
+          type of object with the same properties and fields, as
+          long as it represents a shape with smooth boundary)
+    \item {\tt f} is the function handle representing the analytic
+          function
+    \item {\tt z,w} are vectors of nodes and weights, respectively
+   \end{itemize}
+ \item[Methods]
+   \begin{itemize}
+    \item[]
+    \item {\tt eval\_at(obj,z0)} returns the value of the rational
+          approximation at point {\tt z0} in the complex plane
+    \item {\tt compute\_error(obj,r)} computes the matrix of 
+          pointwise absolute errors
+          in the rational approximation on the mesh of
+          some rectangle represented by
+          {\tt rect} instance {\tt r}
+    \item {\tt show\_error(obj,r)} makes a contour plot of the $\log_{10}$
+          absolute error on {\tt rect} instance {\tt r}
+   \end{itemize}
+\end{description}
+
+\subsection{Child object {\tt ratApproxWithPoles}}
+
+The {\tt ratApproxWithPoles} object is a child of {\tt ratApprox}.
+Additional parameters used to create an instance are
+\begin{itemize}
+ \item vector {\tt poles} contains the locations of poles of
+       the meromorphic function {\tt f} inside the ellipse {\tt ell}
+ \item vector {\tt rs} of radii of tiny circles around each pole
+       (see Section~\ref{sec-rat_approx})    
+\end{itemize}
+For example, to make a rational approximation to $f(z) = 1/\sin(z)$
+on $B(0,1) - B(0,0.01)$ using 50 equally spaced points on
+$\partial B(0,1)$, do
+\begin{equation}
+\begin{aligned}
+ &{\tt >> ell = ellipse(0,0,1,1,[],[]);} \\ 
+ &{\tt >> f = @(z) 1./sin(z);} \\ 
+ &{\tt >> poles = [0];} \\
+ &{\tt >> rs = [0.1];} \\ 
+ &{\tt >> t = linspace(0,1,50);} \\ 
+ &{\tt >> ratf = ratApproxWithPoles(ell,f,poles,rs,t);}
+\end{aligned}
+\end{equation}
+
+The properties and methods are exactly the same as for the parent object,
+but with the addition of {\tt poles} and {\tt rs} properties.

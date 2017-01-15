@@ -1,0 +1,141 @@
+\section{Solving the scattering problem with {\tt dirBC}}
+\label{sec-dirBC}
+
+This object allows the user to solve the
+scattering~(\ref{eqtn-scattprob}) and
+resonance~(\ref{eqtn-resprob}) problems with Dirichlet boundary
+conditions.
+
+\subsection{The boundary condition}
+\label{sec-dirBC-BC}
+
+A Dirichlet boundary condition (rather than the outgoing
+condition) in~(\ref{eqtn-scattprob})
+means enforcing that $\scatt(R) = 0$, giving the following
+boundary value problem:
+\begin{equation}\label{eqtn-dirprob}
+\begin{aligned}
+ \left(-\Delta + V - k^2\right)\scatt &= -V\inc
+ \qquad
+ \text{on }B(0,R), \\
+ \scatt(R) &= 0.
+\end{aligned} 
+\end{equation}
+The solution to~(\ref{eqtn-dirprob}) is a good approximation to
+the solution to~(\ref{eqtn-scattprob}) in case the potential has 
+very thick, high walls that very quickly attenuate the scattered wave.
+
+Discretizing~(\ref{eqtn-dirprob}) amounts to taking the matrices $\dirA$
+and $\dirB$ that come from discretizing the PDE and
+replacing the boundary condition rows of $\dirA$ and $\dirB$ with
+rows of the identity and zeros, respectively. 
+Then if $\dirT(k) = \dirA - k^2 \dirB$, 
+$\dirT(k)\widehat{\scatt} = -\widehat{V\inc}$,
+where the hat indicates values on the mesh of $B(0,R)$.
+The object
+{\tt dirBC} encapsulates the discretization of~(\ref{eqtn-dirprob}).
+
+\subsection{Creating an instance}
+\label{sec-dirBC-create}
+
+Create an instance with
+\begin{verbatim}
+ >> dir = dirBC(Nt,Nrs,Vs,coords,Rs);
+\end{verbatim}
+where the potential $V$ is specified with cell array {\tt Vs}
+(see above) and {\tt coords} equals 'rect', 'polar', or 'complex'
+depending on whether $V = V(x,y)$, $V = V(r,\theta)$, or
+$V = V(z)$.
+
+\subsection{Properties and methods}
+\label{sec-dirBC-properties}
+
+Here are properties and methods, in addition to those
+available through
+parent object {\tt scattResComp2d}:
+\begin{description}
+ \item[Properties]
+   \begin{itemize}
+    \item[]
+    \item {\tt Vs, coords} are as described above
+    \item {\tt A, B} are the matrices $\dirA$ and $\dirB$ described above;
+          the values of the scattered wave on the mesh solve
+          $\dirT(k)\widehat{\scatt} = -\widehat{V\inc}$
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                        
+% Lr probably doesn't need to be a property                                    
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                    
+    \item {\tt Lr} is the discretization of the radial part of the
+          Laplacian, $\frac{\partial^2}{\partial r^2} +     
+          \frac{1}{r}\frac{\partial}{\partial r}$, no boundary
+          or interface conditions applied
+    \item {\tt evecs,evals} are the eigenvalues $E$ and their
+          eigenvalues, computed when {\tt eig\_comp()} is called
+    \item {\tt A\_orig}, {\tt B\_orig}, {\tt A\_cc}, {\tt B\_cc},
+          aren't important right now and
+          not all of them need to be properties, probably
+   \end{itemize}
+ \item[Methods]
+   \begin{itemize}
+    \item[]
+    \item {\tt enforceBC(obj)} adjusts boundary condition rows of 
+          $\dirA$ and $\dirB$
+          as described above
+    \item {\tt T(obj,k)} returns the matrix $\dirT(k)$
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%     
+% kinda outdated
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                 
+    \item {\tt eig\_comp(obj)} computes the eigenvalues of the pencil
+          $(\dirA,\dirB)$ to find resonances
+   \end{itemize}
+\end{description}
+
+\subsection{Solving the scattering problem}
+\label{sec-dirBC-solvescattprob}
+
+The boundary value problem~(\ref{eqtn-dirprob})
+is specified completely with the following three things:
+\begin{itemize}
+ \item a potential function $V$ (supported in some $B(0,R)$),
+ \item wave number $k$, and
+ \item incident wave $\inc$ satisfying $-\Delta\inc = k^2 \inc$.
+\end{itemize}
+Analogously, 
+the discretization of~(\ref{eqtn-dirprob}) is specified completely
+with 
+\begin{itemize}
+ \item a {\tt dirBC} instance, 
+ \item a wave number {\tt k}, and 
+ \item an incident wave {\tt incfun}. 
+\end{itemize}
+Given {\tt k} the default incident wave
+is {\tt incfun = @(x,y) exp(1i*k*x)}.
+
+Supposing a {\tt dirBC} instance (let's call it {\tt dir}) 
+has already been created and the user
+wants to use the default incident wave {\tt incfun = @(x,y) exp(1i*k*x)},
+solving the scattering problem with frequency parameter
+{\tt k} can be done in one line:
+\begin{verbatim}
+ >> scattValuesVec = dir.solve(k);
+\end{verbatim}
+
+If the user wants to use a different incident wave (satisfying
+$-\Delta\inc = k^2\inc$), solving is still a one-liner:
+\begin{verbatim}
+ >> scattValuesVec = dir.solve(k,incfun);
+\end{verbatim}
+
+Here is 
+a full example using the default $\inc = e^{ikx}$ and a piece-wise
+constant ring potential equal to 0 on $0 \le r \le 1$ and
+equal to 1 on $1 < r \le 2$:
+\begin{verbatim}
+ >> Vs = {@(r,t) 0*r; @(r,t) 1 + 0*r};
+ >> coords = 'polar';
+ >> Nt = 20;
+ >> Nrs = [30, 30];
+ >> Rs = [1,2];
+ >> dir = dirBC(Nt,Nrs,Vs,coords,Rs);
+ >> k = 2;
+ >> scattValuesVec = dir.solve(k);
+\end{verbatim}

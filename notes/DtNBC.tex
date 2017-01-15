@@ -1,0 +1,136 @@
+\section{Solving the scattering problem with {\tt DtNBC}}
+\label{sec-DtNBC}
+
+A DtN map boundary condition is an exact boundary condition
+for the scattering problem, meaning that an outgoing wave
+(and only an outgoing wave) will satisfy this boundary condition
+exactly. Therefore, out of the three methods we present here,
+we expect this one to produce the most accurate solution
+to~(\ref{eqtn-scattprob}).
+
+\subsection{The boundary condition}
+\label{sec-DtNBC-BC}
+
+The natural setting for the DtN map is in Fourier space.
+Specifically, 
+\begin{equation}\label{eqtn-dtnmap}
+ \sum_n c_n e^{in\theta} 
+ \quad\xmapsto{\text{DtN map}}\quad
+ \sum_n f_n(k,R) c_n e^{in\theta},
+ \qquad
+ f_n(k,R) = k\frac{\left(H_n^{(1)}\right)'(kR)}{H_n^{(1)}(kR)}.
+\end{equation}
+
+The set of first- and second-kind Hankel functions 
+$\lbrace H_n^{(1)}(kr), H_n^{(2)}(kr) \rbrace_{n=-\infty}^\infty$
+form a basis for the solution space of the PDE
+in~(\ref{eqtn-scattprob}). 
+The first-kind Hankel functions $H_n^{(1)}(kr)$ are a basis for the
+space of outgoing waves. 
+So, a general solution 
+$\sum_n c_n(r) e^{in\theta}$ with
+$c_n(r) = a_n H_n^{(1)}(kr) + b_n H_n^{(2)}(kr)$
+is an outgoing wave only if all the $b_n$'s are zero.
+To guarantee this, we require
+\begin{equation}\label{eqtn-dtnbc}
+ c_n'(R) = f_n(k,R) c_n(R) \qquad \forall n,
+\end{equation}
+which is what we mean by the {\bf DtN map boundary condition}.
+See Section~\ref{sec-dtn_map} for a derivation.
+
+Now, we can't enforce this for all $n$. The best we can do is
+to enforce it for $n = -{\tt Nt}/2 + 1, ..., 0, 1, 2, ... {\tt Nt}/2$,
+that is, a number of Fourier coefficients equal to the number of
+$\theta$ mesh points and corresponding to lowest frequencies.
+To apply the DtN map to the vector
+$x = [c_{-{\tt Nt}/2 + 1}({\tt r}), ..., c_{{\tt Nt}/2}({\tt r})]$
+of these Fourier coefficients evaluated on the radial
+mesh {\tt r}, we have to multiply by the diagonal matrix
+$X(k) = \diag\left([f_{-{\tt Nt}/2 + 1}(k,R), ... , f_{{\tt Nt}/2}(k,R)]\right)
+\otimes e_{{\tt Nr}} e_{{\tt Nr}}^T$. Therefore, applying
+the DtN map to $\widehat{\scatt}$ involves transforming to
+the Fourier representation $x$, applying the diagonal operator, and
+transforming back. The matrix accomplishing this is
+\begin{equation}
+ \dtnC(k) = -({\tt U} \otimes I) X(k) ({\tt Uinv} \otimes I),
+\end{equation}
+with {\tt U, Uinv} as described in Section~\ref{sec-scattResComp2d-fourier}
+and full derivation of $\dtnC(k)$ in Section~\ref{sec-dtnC}.
+The discretization of~(\ref{eqtn-scattprob}) with DtN map
+boundary conditions will then be
+\begin{equation}\label{eqtn-Tdtn}
+ \left( \dtnA - k^2 \dtnB + \dtnC(k) \right) \widehat{\scatt} = -\widehat{V\inc}.
+\end{equation}
+Comparison with~(\ref{eqtn-defT}) shows that we should take
+$\dtnT(k) = \dtnA - k^2 \dtnB + \dtnC(k)$.
+
+\subsection{Creating an instance}
+\label{sec-DtNBC-create}
+
+Same inputs as {\tt dirBC}:
+\begin{verbatim}
+ >> dtn = DtNBC(Nt,Nrs,Vs,coords,Rs);
+\end{verbatim}
+
+\subsection{Properties and methods}
+\label{sec-DtNBC-properties}
+
+Inherits properties and methods of parent {\tt scattResComp2d}, and
+here's more:
+\begin{description}
+ \item[Properties]
+   \begin{itemize}
+    \item[]
+    \item {\tt A,B} are the matrices $\dtnA$ and $\dtnB$
+    \item {\tt Vs,coords} are the same as for {\tt dirBC}
+    \item {\tt Lr} is matrix of radial part of discretization of Laplacian
+    \item {\tt A\_orig, B\_orig, A\_cc, B\_cc} not important right now 
+   \end{itemize}
+ \item[Methods]
+   \begin{itemize}
+    \item[]
+    \item {\tt enforceBC(obj)} sets the boundary condition 
+          rows of $\dtnA$ with derivative part of boundary condition
+          and zeros those rows of $\dtnB$
+    \item {\tt enforceBlockBC(obj,n,X)}
+          is called by {\tt enforceBC()}
+    \item {\tt enforceBC\_cc(obj)} isn't important right now
+    \item {\tt T(obj,k)} returns $\dtnT(k)$ matrix described above
+    \item {\tt dT(obj,k), d2T(obj,k)} return the first and second
+          derivatives of $\dtnT(k)$ with respect to $k$
+    \item {\tt T\_cc(obj,k)} not important right now
+    \item {\tt C(obj,k)} returns the matrix $\dtnC(k)$ described above
+    \item {\tt C\_cc(obj,k)} not important right now
+    \item {\tt dLogTz(obj,z,br), d2LogTz(obj,z,br)} not important right now
+   \end{itemize}
+ \item[Static Methods]
+   \begin{itemize}
+    \item[]
+    \item {\tt DtNcoeffs(n,k,R)} returns $f_n(k,R)$ as described above
+    \item {\tt dDtNcoeffs(n,k,R)} returns first derivative of $f_n$ with
+          respect to $k$, evaluated at $k,R$
+    \item {\tt d2DtNcoeffs(n,k,R)} returns second derivative with respect
+          to $k$, evaluated at $k,R$
+   \end{itemize}    
+\end{description}
+
+\subsection{Solving the scattering problem}
+\label{sec-DtNBC-solvescattprob}
+
+See Section~\ref{sec-dirBC-solvescattprob} for all details, since 
+this works the same way for both {\tt dirBC} and {\tt DtNBC}.
+Here is
+a full example using the default $\inc = e^{ikx}$ and a piece-wise
+constant ring potential equal to 0 on $0 \le r \le 1$ and
+equal to 1 on $1 < r \le 2$:
+\begin{verbatim}
+ >> Vs = {@(r,t) 0*r; @(r,t) 1 + 0*r};
+ >> coords = 'polar';
+ >> Nt = 20;
+ >> Nrs = [30, 30];
+ >> Rs = [1,2];
+ >> dtn = DtNBC(Nt,Nrs,Vs,coords,Rs);
+ >> k = 2;
+ >> scattValuesVec = dtn.solve(k);
+\end{verbatim}
+

@@ -1,0 +1,91 @@
+\subsection{{\tt scattResComp2d\_sparse}}
+\label{sec-scattResComp2d_sparse}
+
+The point of this object is to keep track of all the same
+things as {\tt scattResComp2d}, except instead of storing 
+large matrices, we have
+routines to apply them quickly (at least the important ones).
+For the most part, using the two is exactly the same. In particular,
+creation is the same:
+\begin{equation}
+\begin{aligned}
+ &{\tt >> s = scattResComp2d(Nt,Nrs,Rs);} \\ 
+ &{\tt >> s\_sparse = scattResComp2d\_sparse(Nt,Nrs,Rs);}
+\end{aligned}
+\end{equation}
+
+Here are all the differences.
+\begin{center}
+\begin{longtable}{p{0.33\linewidth} p{0.33\linewidth} p{0.33\linewidth}}
+{\bf Removed}          & {\bf Added}             & {\bf Why} \\ 
+\hline \\ 
+% ---------------------------------------------------
+{\tt ICBCrows}         & {\tt localICBCrows}, 
+                         {\tt globalICBCrows}    & \\ \hline \\
+% ---------------------------------------------------
+                       & {\tt apply\_U()}, 
+                         {\tt apply\_U\_kron\_I()},
+                         {\tt apply\_Uinv()},
+                         {\tt apply\_Uinv\_kron\_I()} 
+                       & For applying {\tt U} and {\tt Uinv}
+                         quickly. \\ \hline \\ 
+% ---------------------------------------------------
+{\tt Dr},
+{\tt Drr}              & {\tt E4}, {\tt D4},
+                         {\tt E3t}, {\tt D3t}
+                       & Avoid storing huge matrices
+                         {\tt Dr} and {\tt Drr}, keep
+                         some pieces for convenience. \\ \hline \\ 
+% ---------------------------------------------------
+{\tt Drs}              &                         
+                       & Who cares. \\ \hline \\ 
+% ---------------------------------------------------
+{\tt It},
+{\tt Jt}               & {\tt apply\_Drr\_J()},
+                         {\tt apply\_J\_kron\_Drr\_J()},
+                         {\tt apply\_Dr\_J()},
+                         {\tt apply\_J\_kron\_Dr\_J()},
+                         {\tt apply\_Dr\_I()},
+                         {\tt apply\_I\_kron\_Dr\_I()},
+                         {\tt apply\_Drr\_I()},
+                         {\tt apply\_I\_kron\_Drr\_I()} 
+                       & Don't store the highly structured
+                         and sparse matrices, just apply where needed. \\ \hline \\ 
+% ---------------------------------------------------
+{\tt enforceDE()},
+{\tt enforceIC()},
+{\tt enforceBlockIC()} & {\tt apply\_op\_no\_bcs()} 
+                       & The removed methods construct the
+                         huge matrices $A$ and $B$ (with the
+                         exception of the boundary condition rows,
+                         which are set later)
+                         before
+                         applying $A - k^2 B$. Just apply
+                         $A - k^2 B$ (with wrong boundary condition rows,
+                         to be corrected later)
+                         instead. \\ \hline \\ 
+% ---------------------------------------------------
+{\tt solve(...)}   & {\tt solve(...,precond,verbose)}
+                       & Old solve directly inverts $T(k)$
+                         and new one inverts $T(k)$ iteratively.
+                         Has the option to pass a 
+                         preconditioner (will use a default if none
+                         passed) and to show GMRES output if verbose
+                         set to true (defaults to false). \\ \hline \\ 
+% ---------------------------------------------------
+                       & {\tt ICBCmatrices()} 
+                       & Sets up {\tt ArowChange}, 
+                         {\tt BrowChange} without
+                         creating $A$ and $B$. \\ \hline \\ 
+% ---------------------------------------------------
+                       & {\tt apply\_DtNmap()} 
+                       & Applies $\dtnC(k)$ from DtN map
+                         boundary condition formulation. \\ \hline \\ 
+% ---------------------------------------------------
+                       & {\tt apply\_kron(X,Y,xhat)} 
+                       & Apply kronecker product
+                         fast using rule $(B^T \otimes A)
+                         \operatorname{vec}(X) = 
+                         \operatorname{vec}(AXB)$. \\ 
+\end{longtable}
+\end{center}

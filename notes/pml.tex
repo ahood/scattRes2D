@@ -1,0 +1,28 @@
+\section{Discretizing with a PML}
+\label{sec-pml}
+
+I define $s(r) = r + 1i*\ell(r)\chi_{>R}$ where $R$ is the radius
+at which the PML starts, $\ell(R) = 0$ and $\ell$ has two derivatives.
+Then $s'(r) = 1 + 1i*\ell'(r)\chi_{>R}$ and
+$s''(r) = 1i*\ell''(r)\chi_{>R}$. 
+By the chain rule, 
+\begin{align*}
+ \frac{\partial}{\partial s} 
+  = \frac{1}{\partial s/\partial r} \frac{\partial}{\partial r}.
+\end{align*}
+So if {\tt Ds} is the matrix that maps values on the mesh to
+$s$-derivatives on the mesh, and if {\tt ds} is the values of $\partial s/\partial r$
+on the mesh, then 
+${\tt Ds} = (I \otimes {\tt diag(1./ds)}){\tt Dr}$ where {\tt Dr} is defined in
+Section~\ref{sec-laplacian} (it maps values to $r$-derivatives).
+
+To set up the second derivative matrix, use
+\begin{align*}
+ \frac{d}{ds}\frac{d}{ds}
+ &= \frac{1}{s'(r)}\frac{d}{dr}\left(\frac{1}{s'(r)}\frac{d}{dr}\right) \\
+ &= \frac{1}{s'(r)}\left(\frac{d}{dr}\frac{1}{s'(r)}\frac{d}{dr} +
+       \frac{1}{s'(r)}\frac{d^2}{dr^2} \right) \\
+ &= -\frac{s''(r)}{s'(r)^3}\frac{d}{dr} + \frac{1}{s'(r)^2}\frac{d^2}{dr^2}.
+\end{align*}
+
+

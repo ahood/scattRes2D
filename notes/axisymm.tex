@@ -1,0 +1,19 @@
+\section{True solution for axisymmetric case}
+
+Here we take a potential V supported on $R_1 < r < R_2$ and equal to
+$V_0$ there.
+Given incident wave $e^{ikx}$, we assume the total wave solution is the
+sum of the incident wave and some outgoing scattered wave. This means
+that after taking the Fourier transform of everything and requiring
+that the coefficients be the same,
+\[
+ \psi_{tot} = \begin{cases}
+               aJ_n(kr) & (r < R_1) \\
+               bJ_n(\tilde{k}r) + cY_n(\tilde{k}r) & (R_1 < r < R_2) \\
+               dH_n(kr) + \underbrace{i^nJ_n(kr)}_{\text{incident}} & ( r > R_2)
+              \end{cases}
+\]
+where $\tilde{k} = \sqrt{k^2-V_0}$.
+Once we impose the usual $\mathcal{C}^1$ interface conditions at
+$R_1$ and $R_2$, the coefficients are obtained. Writing that out isn't
+interesting and it's already coded.

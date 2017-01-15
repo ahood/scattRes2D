@@ -1,0 +1,328 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>demo_three_bumps</title><meta name="generator" content="MATLAB 8.3"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2017-01-14"><meta name="DC.source" content="demo_three_bumps.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#3">Define the potential from the paper and discretize</a></li><li><a href="#8">Pick a region to look at</a></li><li><a href="#14">Resonance computation</a></li></ul></div><pre class="codeinput"><span class="keyword">function</span> demo_three_bumps
+</pre><pre class="codeinput"><span class="comment">% This demo replicates the experiment in Kevin Lin's paper</span>
+<span class="comment">% "Numerical Study of Quantum Resonances in Chaotic Scattering"</span>
+<span class="comment">% using our methods instead of his. Our results agree.</span>
+<span class="comment">% We use dense methods in this demo--unfortunately this computation</span>
+<span class="comment">% ends up taking a long time. So, we show the steps but comment out the</span>
+<span class="comment">% eigenvalue computation--the eigenvalues are saved from a previous run, so</span>
+<span class="comment">% we read those from a file.</span>
+<span class="comment">% See demo_three_bumps_sparse.m for a sparse computation. The sparse</span>
+<span class="comment">% versions of the various objects are much faster to set up, but resonance</span>
+<span class="comment">% computation using them is infeasible at this time due to the lack of a</span>
+<span class="comment">% decent preconditioner.</span>
+<span class="comment">%</span>
+<span class="comment">% The user is recommended to read the "publish"-ed version in the html</span>
+<span class="comment">% folder rather than invoking this file directly.</span>
+<span class="comment">% WARNING: This demo is very slow to run.</span>
+
+clear <span class="string">all</span>
+close <span class="string">all</span>
+addpath(fileparts(pwd));
+</pre><h2>Define the potential from the paper and discretize<a name="3"></a></h2><pre class="codeinput">Rcenters = 1.4;
+sigma = 1/3;
+hbar = 0.025;
+laplaceCoeff = hbar^2/2;
+c = Rcenters*exp(2i*pi*(1:3)/3);
+G = @(x,y,cj) exp(-abs(x+1i*y-cj).^2/2/sigma^2);
+V = @(x,y) (G(x,y,c(1)) + G(x,y,c(2)) + G(x,y,c(3)))/laplaceCoeff;
+coords = <span class="string">'rect'</span>;
+</pre><p>Sanity check to see we got almost all volume.</p><pre class="codeinput">cdist = 2.5;
+R = Rcenters + cdist;
+resid = V(R,0);
+fprintf(<span class="string">'Potential height at truncation radius = %f is %4.2e\n'</span>, R, resid);
+</pre><pre class="codeoutput">Potential height at truncation radius = 3.900000 is 1.95e-09
+</pre><p>Choose parameters for dtn problem and rational approximation.</p><pre class="codeinput">Nt = 110; <span class="comment">% mesh points in theta direction</span>
+Nr = 110; <span class="comment">% " " " r "</span>
+N = 80; <span class="comment">% poles in rational approximation</span>
+</pre><p>Create a problem using exact boundary condition based on DtN map.</p><pre class="codeinput">dtn = DtNBC(Nt,Nr,{V},coords,R);
+</pre><p>Check the potential looks right.</p><pre class="codeinput">figure, u = dtn.plotFun(V,<span class="string">'potential'</span>,@real,coords);
+</pre><img vspace="5" hspace="5" src="demo_three_bumps_01.png" alt=""> <h2>Pick a region to look at<a name="8"></a></h2><p>From Lin's paper.</p><pre class="codeinput">E0lin = 0.5; dElin = 0.1; ylin = -hbar; <span class="comment">% from Lin's paper Fig 14 (top of rectangle is at zero)</span>
+innerRec_lin = rect(E0lin-dElin,E0lin+dElin, ylin, 0, [], []);
+outerRec_lin = rect(0.2, 0.8, -0.045, 0, [], []);
+</pre><p>Scaled for our basis (could also scale B instead).</p><pre class="codeinput">E0 = E0lin/laplaceCoeff; dE = dElin/laplaceCoeff; y = ylin/laplaceCoeff;
+innerRec = rect(E0-dE,E0+dE,y,0,[],[]);
+<span class="comment">% pick ellipse that contains it</span>
+c = E0 + 1i*(innerRec.y1 + innerRec.y2)/2;
+b = (innerRec.y2 - innerRec.y1)/2 + dE; a = 2*dE;
+ell = ellipse(c,0,a,b,[],[]);
+<span class="comment">% make a rectangle containing the ellipse</span>
+buff = 1;
+x1 = real(ell.c) - ell.a - buff; x2 = real(ell.c) + ell.a + buff;
+y1 = imag(ell.c) - ell.b - buff; y2 = imag(ell.c) + ell.b + buff;
+outerRec = rect(x1,x2,y1,y2,100,100);
+</pre><p>Define a rational approximation that is good on the ellipse ell.</p><pre class="codeinput">rat = ratApproxDtNBC(dtn,ell,1,N);
+</pre><p>Problem we want small residuals with respect to.</p><pre class="codeinput">T = @(z) dtn.T( rat.mysqrt(z));
+</pre><p>Show the region, show DtN map approx error, poles (if any).</p><pre class="codeinput">figure, hold <span class="string">all</span>
+ell.draw()
+innerRec.draw()
+outerRec.draw()
+rat.show_poles(outerRec)
+rat.show_error(outerRec)
+outerRec.focus(0);
+axis <span class="string">equal</span>
+legend(<span class="string">'ellipse'</span>,<span class="string">'inner rect'</span>,<span class="string">'outer rect'</span>);
+</pre><img vspace="5" hspace="5" src="demo_three_bumps_02.png" alt=""> <h2>Resonance computation<a name="14"></a></h2><p>Get eigenvalues of rational approximation (some spurious). This is commented out because it took over a day on my Macbook (and used lots of virtual memory)--instead we read previously computed eigenvalues from a file.</p><pre class="codeinput"><span class="comment">% use this</span>
+<span class="comment">% e = eig(full(rat.Aschur));</span>
+
+<span class="comment">% second version--unfortunately eigs() misses some eigs we want</span>
+<span class="comment">% opts.isreal = false;</span>
+<span class="comment">% e = eigs(rat.Aschur,400,ell.c,opts);</span>
+</pre><p>save or read the eigenvalues</p><pre class="codeinput">dirname = <span class="string">'three_bumps_output'</span>;
+filename = sprintf(<span class="string">'%s/eigs_%d_%d_%d.dat'</span>,dirname,Nt,Nr,N);
+<span class="keyword">if</span> exist(filename, <span class="string">'file'</span>) == 2
+    disp(<span class="string">'Opening eigenvalues file'</span>)
+    fid = fopen(filename,<span class="string">'r'</span>);
+    e = fscanf(fid, <span class="string">'%f %f'</span>, [2 Inf]).';
+<span class="keyword">else</span>
+    disp(<span class="string">'Starting eigenvalue computation from scratch'</span>)
+    fid = fopen(filename,<span class="string">'w'</span>);
+    <span class="keyword">for</span> j = 1:length(e)
+        fprintf(fid,<span class="string">'%+8.6f %+8.6f\n'</span>, real(e(j)), imag(e(j)));
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+fclose(fid);
+
+<span class="comment">% %%</span>
+<span class="comment">% % Just take the ones inside the rectangle of interest.</span>
+<span class="comment">% e_in = e( innerRec.contains(e) );</span>
+<span class="comment">% fprintf('There are %d eigs inside for Nt,Nr,N = %d,%d,%d\n', length(e_in),Nt,Nr,N);</span>
+</pre><pre class="codeoutput">Opening eigenvalues file
+</pre><p>Plot after rescaling to usual physics units.</p><pre class="codeinput">figure, hold <span class="string">all</span>
+e = e*laplaceCoeff;
+<span class="comment">% fclose(fid);</span>
+plot(e(:,1),e(:,2),<span class="string">'*'</span>,<span class="string">'displayname'</span>,<span class="string">'mine'</span>);
+<span class="comment">% plot(e_in*laplaceCoeff,'*','displayname','mine');</span>
+innerRec_lin.draw()
+outerRec_lin.focus();
+title([<span class="string">'Trying to replicate Fig 14 with Nt,Nrs,N = '</span> num2str(Nt) <span class="string">','</span> num2str(Nr) <span class="string">','</span> num2str(N)]);
+</pre><img vspace="5" hspace="5" src="demo_three_bumps_03.png" alt=""> <p>Show the eigenvalues Lin computed in Fig 14. of his paper.</p><pre class="codeinput">fid = fopen(<span class="string">'three_bumps_output/lin.txt'</span>);
+elin = fscanf(fid, <span class="string">'%f %f'</span>, [2 Inf]).';
+fclose(fid);
+plot(elin(:,1),elin(:,2),<span class="string">'o'</span>, <span class="string">'displayname'</span>,<span class="string">'Lin''s'</span>);
+
+innerRec_lin.draw();
+outerRec_lin.focus();
+legend <span class="string">show</span>
+</pre><img vspace="5" hspace="5" src="demo_three_bumps_04.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+function demo_three_bumps
+% This demo replicates the experiment in Kevin Lin's paper
+% "Numerical Study of Quantum Resonances in Chaotic Scattering"
+% using our methods instead of his. Our results agree. 
+% We use dense methods in this demoREPLACE_WITH_DASH_DASHunfortunately this computation 
+% ends up taking a long time. So, we show the steps but comment out the 
+% eigenvalue computationREPLACE_WITH_DASH_DASHthe eigenvalues are saved from a previous run, so
+% we read those from a file.
+% See demo_three_bumps_sparse.m for a sparse computation. The sparse 
+% versions of the various objects are much faster to set up, but resonance
+% computation using them is infeasible at this time due to the lack of a 
+% decent preconditioner.
+%
+% The user is recommended to read the "publish"-ed version in the html
+% folder rather than invoking this file directly.
+% WARNING: This demo is very slow to run.
+
+clear all
+close all
+addpath(fileparts(pwd));
+
+%% Define the potential from the paper and discretize
+Rcenters = 1.4;
+sigma = 1/3;
+hbar = 0.025;
+laplaceCoeff = hbar^2/2;
+c = Rcenters*exp(2i*pi*(1:3)/3);
+G = @(x,y,cj) exp(-abs(x+1i*y-cj).^2/2/sigma^2);
+V = @(x,y) (G(x,y,c(1)) + G(x,y,c(2)) + G(x,y,c(3)))/laplaceCoeff;
+coords = 'rect';
+
+%%
+% Sanity check to see we got almost all volume.
+cdist = 2.5;
+R = Rcenters + cdist;
+resid = V(R,0);
+fprintf('Potential height at truncation radius = %f is %4.2e\n', R, resid);
+
+%%
+% Choose parameters for dtn problem and rational approximation.
+Nt = 110; % mesh points in theta direction
+Nr = 110; % " " " r " 
+N = 80; % poles in rational approximation
+
+%%
+% Create a problem using exact boundary condition based on DtN map.
+dtn = DtNBC(Nt,Nr,{V},coords,R);
+
+%%
+% Check the potential looks right.
+figure, u = dtn.plotFun(V,'potential',@real,coords);
+
+%% Pick a region to look at
+
+%%
+% From Lin's paper.
+E0lin = 0.5; dElin = 0.1; ylin = -hbar; % from Lin's paper Fig 14 (top of rectangle is at zero)
+innerRec_lin = rect(E0lin-dElin,E0lin+dElin, ylin, 0, [], []);
+outerRec_lin = rect(0.2, 0.8, -0.045, 0, [], []);
+
+%%
+% Scaled for our basis (could also scale B instead).
+E0 = E0lin/laplaceCoeff; dE = dElin/laplaceCoeff; y = ylin/laplaceCoeff;
+innerRec = rect(E0-dE,E0+dE,y,0,[],[]);
+% pick ellipse that contains it 
+c = E0 + 1i*(innerRec.y1 + innerRec.y2)/2;
+b = (innerRec.y2 - innerRec.y1)/2 + dE; a = 2*dE;
+ell = ellipse(c,0,a,b,[],[]);
+% make a rectangle containing the ellipse
+buff = 1;
+x1 = real(ell.c) - ell.a - buff; x2 = real(ell.c) + ell.a + buff;
+y1 = imag(ell.c) - ell.b - buff; y2 = imag(ell.c) + ell.b + buff;
+outerRec = rect(x1,x2,y1,y2,100,100);
+
+%%
+% Define a rational approximation that is good on the ellipse ell.
+rat = ratApproxDtNBC(dtn,ell,1,N);
+
+%%
+% Problem we want small residuals with respect to.
+T = @(z) dtn.T( rat.mysqrt(z));
+
+%%
+% Show the region, show DtN map approx error, poles (if any).
+figure, hold all
+ell.draw()
+innerRec.draw()
+outerRec.draw()
+rat.show_poles(outerRec)
+rat.show_error(outerRec)
+outerRec.focus(0);
+axis equal
+legend('ellipse','inner rect','outer rect');
+
+%% Resonance computation
+% Get eigenvalues of rational approximation (some spurious). This is
+% commented out because it took over a day on my Macbook (and used lots of
+% virtual memory)REPLACE_WITH_DASH_DASHinstead we read previously computed eigenvalues from a
+% file.
+
+% use this
+% e = eig(full(rat.Aschur));
+
+% second versionREPLACE_WITH_DASH_DASHunfortunately eigs() misses some eigs we want
+% opts.isreal = false;
+% e = eigs(rat.Aschur,400,ell.c,opts);
+
+%%
+% save or read the eigenvalues
+dirname = 'three_bumps_output';
+filename = sprintf('%s/eigs_%d_%d_%d.dat',dirname,Nt,Nr,N);
+if exist(filename, 'file') == 2
+    disp('Opening eigenvalues file')
+    fid = fopen(filename,'r');
+    e = fscanf(fid, '%f %f', [2 Inf]).';
+else
+    disp('Starting eigenvalue computation from scratch')
+    fid = fopen(filename,'w');
+    for j = 1:length(e)
+        fprintf(fid,'%+8.6f %+8.6f\n', real(e(j)), imag(e(j)));
+    end
+end
+fclose(fid);
+
+% %%
+% % Just take the ones inside the rectangle of interest.
+% e_in = e( innerRec.contains(e) );
+% fprintf('There are %d eigs inside for Nt,Nr,N = %d,%d,%d\n', length(e_in),Nt,Nr,N);
+
+%%
+% Plot after rescaling to usual physics units.
+figure, hold all
+e = e*laplaceCoeff;
+% fclose(fid);
+plot(e(:,1),e(:,2),'*','displayname','mine');
+% plot(e_in*laplaceCoeff,'*','displayname','mine');
+innerRec_lin.draw()
+outerRec_lin.focus();
+title(['Trying to replicate Fig 14 with Nt,Nrs,N = ' num2str(Nt) ',' num2str(Nr) ',' num2str(N)]);
+
+%%
+% Show the eigenvalues Lin computed in Fig 14. of his paper.
+fid = fopen('three_bumps_output/lin.txt');
+elin = fscanf(fid, '%f %f', [2 Inf]).';
+fclose(fid);
+plot(elin(:,1),elin(:,2),'o', 'displayname','Lin''s');
+
+innerRec_lin.draw();
+outerRec_lin.focus();
+legend show
+
+##### SOURCE END #####
+--></body></html>

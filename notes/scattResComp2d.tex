@@ -1,0 +1,330 @@
+\section{Using {\tt scattResComp2d}}
+\label{sec-scattResComp2d}
+
+The {\tt scattResComp2d} object does the heavy lifting of
+bookkeeping, discretizing, and plotting, as well as
+having a few other conveniences.
+
+Creating an instance is simple: 
+\begin{verbatim}
+ >> s = scattResComp2d(Nt,Nrs,Rs);
+\end{verbatim}
+where
+\begin{itemize}
+ \item {\tt Nt} is the number of mesh points in the $\theta$
+                 direction ({\bf must be even} because of the way
+                 the Laplacian is constructed--if you pass an odd
+                 {\tt Nt}, it will be increased by one)
+ \item {\tt Nrs} is a vector holding the number of mesh points in
+                 the radial direction on each concentric subregion
+                 (see Sections~\ref{sec-mesh} and~\ref{sec-potential})
+ \item {\tt Rs} is a vector holding the outer radius of each
+                 subregion.
+\end{itemize}
+What follows is a description of all properties and methods, grouped
+by usage.
+
+\subsection{Easy indexing}
+\label{sec-scattResComp2d-indexing}
+
+\begin{description}
+ \item[Properties]
+   \begin{itemize}
+    \item[] % so bullet starts on next line
+    \item {\tt Nr} is the total number of mesh points in the 
+                 radial direction (sum over {\tt Nrs})
+    \item {\tt BCrows} is the vector of row indices where the boundary
+                 conditions will be placed
+    \item {\tt valRows} is the vector of row indices in each block row
+                 where continuity of the scattered wave 
+                 across subregions is enforced
+    \item {\tt derRows} same as {\tt valRows}, but for enforcing
+                 differentiability
+    \item {\tt ICBCrows} is the (ordered) vector of row indices where
+                 continuity, differentiability, and boundary
+                 conditions are enforced
+   \end{itemize}
+\end{description}
+
+\subsection{Easy mesh representations}
+\label{sec-scattResComp2d-mesh}
+
+\begin{description}
+ \item[Properties]
+   \begin{itemize}  
+    \item[] % so bullet starts on next line
+    \item {\tt r} is the vector of mesh points in the radial direction
+    \item {\tt theta} is the vector of mesh points in the theta direction,
+          starting from 0 and not including $2\pi$.
+    \item {\tt rr,tt} are matrices of mesh point locations in 
+          polar coordinates (from {\tt meshgrid}), used for 3d plotting
+    \item {\tt xx,yy} are matrices of mesh point locations in rectangular
+          coordinates, same ordering as {\tt rr,tt}
+    \item {\tt rs,ts} are vectors of mesh point locations in
+          polar coordinates, where {\tt rs} is a stack of copies of the
+          vector {\tt r},
+          and {\tt ts} has {\tt Nr} copies of {\tt theta(1)} at the top,
+          followed by {\tt Nr} copies of {\tt theta(2)}, etc.
+    \item {\tt xs,ys} are vectors of mesh point locations in
+          rectangular coordinates (same order as {\tt rs,ts})
+    \item {\tt zs} is a vector of mesh point locations represented
+          in complex coordinates ($z = x + iy$)
+   \end{itemize}
+
+ \item[Methods]
+   \begin{itemize}
+    \item[] % so bullet starts on next line
+    \item {\tt valuesVecFromFun(obj,f,coords)} 
+          takes a function handle {\tt f} representing a 
+          function $f$ on the 
+          plane and returns its values on the mesh of $B(0,R)$:
+         \begin{description}
+          \item[{\tt valuesVecFromFun(obj,f,'rect')}] implies
+          $f = f(x,y)$, and returns 
+          {\tt f(xs,ys)}, 
+          \item[{\tt valuesVecFromFun(obj,f,'polar')}] implies
+          $f = f(r,\theta)$ and returns
+          {\tt f(rs,ts)}, and
+          \item[{\tt valuesVecFromFun(obj,f,'complex')}] implies
+          $f = f(z)$ and returns
+          {\tt f(zs)}
+         \end{description}
+    \item {\tt valuesVecFromFunCellArray(obj,fs,coords)} is same
+          as {\tt valuesVecFromFun} except {\tt fs} is
+          a cell array of functions which represent a piecewise
+          continuous function on $B(0,R)$ by continuous functions
+          defined for each subregion separately
+    \item {\tt plotValuesVec(obj,valuesVec,titlestr,part)}
+          makes a 3d plot of the specified part 
+          (usually real, imag, or abs)
+          of a function given its 
+          valuesVec representation, and uses {\tt titlestr} 
+          as the title of the
+          figure ({\tt part} defaults to {\tt @real} 
+          if {\tt []} is passed)
+    \item {\tt plotFun(obj,f,titlestr,part,coords)} makes
+          3d plot of the specified part (usually real, imag,
+          or abs) of the function f
+          ({\tt part} defaults to {\tt @real} if {\tt []} is passed.
+   \end{itemize}
+\end{description}
+
+\subsection{Fourier representations and converting}
+\label{sec-scattResComp2d-fourier}
+
+\begin{description}
+ \item[Properties]
+   \begin{itemize}
+    \item[] % so bullet starts on next line
+    \item {\tt Ns} is the vector of indices of Fourier series terms that
+                 would be computed with the discrete Fourier transform
+                 ({\tt -Nt/2 + 1:Nt/2})
+    \item {\tt U} is the matrix that maps Fourier coefficients 
+                  (with indices {\tt Ns}) to function values on
+                  {\tt theta}
+    \item {\tt Uinv} is the inverse of {\tt U}, mapping function values
+                  to Fourier coefficients
+   \end{itemize}
+
+ \item[Methods]
+   \begin{itemize}
+    \item[] % so bullet starts on next line
+    \item {\tt fourierVecFromValuesVec(obj,valuesVec)} 
+          transforms a valuesVec into a stack of Fourier
+          coefficents with indices {\tt Ns}, each evaluated
+          on the radial mesh {\tt r}
+    \item {\tt valuesVecFromFourierVec(obj,fourierVec)}
+          does the opposite and allows for more or
+          fewer Fourier coefficients
+    \item {\tt fourierVecFromFun(obj,f,coords)} finds the valuesVec
+          for {\tt f} and transforms it to a fourierVec
+    \item {\tt fourierVecFromFunCellArray(obj,fs,coords)}
+          does what {\tt valuesVecFromFunCellArray} does then
+          transforms to a fourierVec
+    \item {\tt plotFourierVec(obj,fourierVec,titlestr,part)}
+          turns a fourierVec into a valuesVec and plots using
+          {\tt plotValuesVec}
+    \item {\tt chebVecFromFourierVec(obj,fourierVec)} takes each
+          $f_n(\hat{r})$ (where {\tt fourierVec} is a stack of these),
+          applies {\tt radialVals2chebCoeffs} (see below)
+          and returns the stack of these results
+    \item {\tt fourierVecFromChebVec(obj,chebVec)} does the opposite,
+          applying {\tt chebCoeffs2radialVals}          
+    \item {\tt radialVals2chebCoeffs(obj,v,parity)} takes the values
+          {\tt v} of an even or odd function evaluated on the radial mesh
+          {\tt r} ({\tt parity} is {\tt 'even'} or {\tt 'odd'}), splits
+          into $v_1$, $v_2$, ... according to piecewise radial mesh sizes,
+          finds the Chebyshev coefficients $c_m$ of each $v_m$
+          (more detail below), and returns the stack of $c_m$'s
+    \item {\tt chebCoeffs2radialVals(obj,c,parity)} reverses the process
+    \item {\tt halfChebVals2chebCoeffs(v,parity)} takes a vector {\tt v}
+          of values of even or odd function $f$ ({\tt parity} is
+          {\tt 'even'} or {\tt 'odd'}) on a half Chebyshev mesh of $[0,1]$
+          and as many Chebyshev coefficients of $f$ as there are
+          values in {\tt v}
+    \item {\tt chebCoeffs2halfChebVals(c,parity)} reverses the process
+    \item {\tt fullChebVals2chebCoeffs(v)} takes a vector {\tt v} of
+          values of a function $f$ on a Chebyshev mesh of $[0,1]$ and
+          returns as many Chebyshev coefficients as there are values
+    \item {\tt chebCoeffs2fullChebVals(c)} reverses the process
+   \end{itemize}
+\end{description}
+
+\subsection{Chebyshev representations and converting}
+\label{sec-scattResComp2d-chebyshev}
+
+\begin{description}
+ \item[Properties]
+   \begin{itemize}
+    \item[] % so bullet starts on next line
+    \item {\tt Winv\_even} is a matrix such that {\tt Winv\_even*c}
+          equals {\tt chebCoeffs2radialVals(obj,c,'even')} (see below)
+    \item {\tt Winv\_odd} is a matrix such that {\tt Winv\_odd*c}
+          equals {\tt chebCoeffs2radialVals(obj,c,'odd')} (see below)
+   \end{itemize}
+ \item[Methods]
+   \begin{itemize}
+    \item[] % so bullet starts on next line
+    \item {\tt chebVecFromFourierVec(obj,fourierVec)} takes each
+          $f_n(\hat{r})$ (where {\tt fourierVec} is a stack of these),
+          applies {\tt radialVals2chebCoeffs} (see below)
+          and returns the stack of these results
+    \item {\tt fourierVecFromChebVec(obj,chebVec)} does the opposite,
+          applying {\tt chebCoeffs2radialVals}          
+    \item {\tt chebVecFromValuesVec(obj,valuesVec)} converts the stack
+          of function values to a stack of Fourier coefficient values to
+          a stack of Chebyshev coefficients for those piecewise-defined
+          Fourier coefficient functions
+    \item {\tt valuesVecFromChebVec(obj,chebVec)} does the opposite
+    \item {\tt radialVals2chebCoeffs(obj,v,parity)} takes the values
+          {\tt v} of an even or odd function evaluated on the radial mesh
+          {\tt r} ({\tt parity} is {\tt 'even'} or {\tt 'odd'}), splits
+          into $v_1$, $v_2$, ... according to piecewise radial mesh sizes,
+          finds the Chebyshev coefficients $c_m$ of each $v_m$
+          (more detail below), and returns the stack of $c_m$'s
+    \item {\tt chebCoeffs2radialVals(obj,c,parity)} reverses the process
+    \item {\tt halfChebVals2chebCoeffs(v,parity)} takes a vector {\tt v}
+          of values of even or odd function $f$ ({\tt parity} is
+          {\tt 'even'} or {\tt 'odd'}) on a half Chebyshev mesh of $[0,1]$
+          and as many coefficients of the expansion of $f$ in even or odd
+          Chebyshev polynomials as there are values in {\tt v} (see
+          Section~\ref{sec-cheb_basis})
+    \item {\tt chebCoeffs2halfChebVals(c,parity)} reverses the process
+    \item {\tt fullChebVals2chebCoeffs(v)} takes a vector {\tt v} of
+          values of a function $f$ on a Chebyshev mesh of $[0,1]$ and
+          returns as many Chebyshev coefficients as there are values
+    \item {\tt chebCoeffs2fullChebVals(c)} reverses the process
+   \end{itemize}
+\end{description}
+
+\subsection{Creating discretized scattering problem}
+\label{sec-scattResComp2d-create}
+
+\begin{description}
+ \item[Properties]
+   \begin{itemize}
+    \item[] % so bullet starts on next line
+    \item {\tt Dr} is the matrix that maps $f({\tt rs,ts})$ to
+          $\frac{\partial f}{\partial r}({\tt rs,ts})$
+    \item {\tt Drr} is the matrix that maps $f({\tt rs,ts})$ to
+          $\frac{\partial^2 f}{\partial r^2}({\tt rs,ts})$
+    \item {\tt Dtt} is the matrix that maps $f({\tt theta})$ to
+          $\frac{\partial^2 f}{\partial\theta^2}({\tt theta})$
+          (see Section~\ref{sec-laplacian} for how this relates to discretization
+          of last term in Laplacian)
+    \item {\tt Drs} is not interesting right now
+    \item {\tt Dr\_I}, {\tt Dr\_J}, {\tt Drr\_I}, {\tt Drr\_J}
+          are matrices used to construct {\tt Dr} and {\tt Drr}
+          according to 
+          \begin{verbatim}
+           Dr  = kron(It,Dr_I)  + kron(Jt,Dr_J)
+           Drr = kron(It,Drr_I) + kron(Jt,Drr_J)
+          \end{verbatim}
+          (see Section~\ref{sec-piecewise} for derivation of
+          {\tt Dr\_I, Dr\_J, Drr\_I} and {\tt Drr\_J})
+    \item {\tt It}, {\tt Jt} are {\tt Nt} $\times$ {\tt Nt}
+          matrices equaling the identity and 
+          $\begin{bmatrix} 0 & I_{half} \\ I_{half} & 0\end{bmatrix}$,
+          respectively, where $I_{half}$ is the {\tt Nt/2} identity
+          ({\bf this is why {\tt Nt} should be even})
+   \end{itemize}
+
+ \item[Methods]
+   \begin{itemize}
+    \item[] % so bullet starts on next line
+    \item {\tt enforceDE} is called only by the child objects
+          corresponding to boundary condition choice, and constructs
+          the matrices $A$ and $B$ such that $A-k^2B$ is the discretization
+          of $-\Delta + V - k^2 I$
+    \item {\tt enforceIC, enforceBlockIC}
+          replaces the {\tt valRows} and {\tt derRows} of $A$ with
+          equations enforcing continuity and differentiability 
+          at subregion interfaces and zeros the same rows of $B$
+    \item {\tt RHSfromFun(obj,incfun)} will only be called
+          after a {\tt dirBC}, {\tt pmlBC} or {\tt DtNBC}
+          instance is created, and returns
+          the valuesVec for $-V\inc$ 
+          (the Right Hand Side of~(\ref{eqtn-scattprob}))
+          but with the boundary and
+          interface condition rows set to zero--note that 
+          {\tt incfun} must be in the same
+          coordinates which are specified by {\tt coords}
+          when the {\tt *BC} instance is created.
+          {\bf Alternatively, the user can pass a wave number $k$
+          in place of {\tt incfun}
+          and the default {\tt incfun = @(x,y) exp(1i*k*x)} will be used.}
+    \item {\tt solve(obj,k,incfun)} will only be called after
+          a {\tt dirBC}, {\tt pmlBC} or {\tt DtNBC} instance
+          is created and returns the values of the approximate scattered
+          wave on the user's mesh of $B(0,R)$--the last argument should
+          be omitted to use the default $\inc$. For testing purposes,
+          if the user passes a vector for {\tt incfun} the
+          vector {\tt T(k)\textbackslash incfun} will be returned.
+   \end{itemize}
+\end{description}
+
+\subsection{Bessel functions and resonance processing}
+\label{sec-scattResComp2d-bessel}
+
+\begin{description}
+ \item[Static methods]
+   \begin{itemize}
+    \item[] % so bullet starts on next line
+    \item {\tt sort\_eigs} sorts a vector of eigenvalues from 
+          left to right in the complex plane and applies same
+          ordering to eigenvectors
+    \item {\tt get\_closest(p,n,p0)} takes a vector {\tt p} of
+          points and returns a vector of the {\tt n} points
+          closest to {\tt p0}
+    \item {\tt J, Y} are wrappers for the first and second kind
+          Bessel functions built in to \textsc{Matlab}, e.g.
+          {\tt J(n,k,x) = besselj(n,k*x)}, and 
+          {\tt J(n,k,x)} $= J_n(kx)$
+    \item {\tt H} is a wrapper for the first kind Hankel function
+          built in to \textsc{Matlab} (first kind corresponds to
+          outgoing waves)
+    \item {\tt dJ, dY, dH} are derivatives of {\tt J, Y, H} 
+          with respect to the third variable, e.g.
+          {\tt dJ(n,k,x)} $= k J_n'(kx)$
+   \end{itemize}
+\end{description}
+
+\subsection{Not important right now}
+\label{sec-scattResComp2d-unimportant}
+
+\begin{description}
+ \item[Properties not worth describing right now]
+   \begin{itemize}
+    \item[] % so bullet starts on next line
+    \item {\tt valRows\_cc}, {\tt derRows\_cc}, 
+          {\tt ArowChange}, {\tt BrowChange}, 
+          {\tt rowPlacement}
+   \end{itemize}
+
+ \item[Methods not worth describing right now]
+   \begin{itemize}
+    \item[] % so bullet starts on next line
+    \item {\tt RHSfromFun\_cc}, {\tt dLogTz},
+          {\tt plotRayValuesVec}
+   \end{itemize}
+\end{description}

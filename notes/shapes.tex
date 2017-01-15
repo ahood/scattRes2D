@@ -1,0 +1,116 @@
+\section{The {\tt ellipse} and {\tt rect} shape objects}
+\label{sec-ellipse}
+
+First, the user has to specify a region in the complex plane
+where accurate
+resonance approximations are desired. In theory the
+region could be any shape, but for simplicity the user
+will be required to specify an ellipse by creating
+an {\tt ellipse} instance (call it {\tt ell}). Another handy
+shape for storing meshes and plotting is a rectangular 
+subset of the complex plane,
+implemented as the {\tt rect} object. We deal with this 
+one first.
+
+\subsection{Creating an instance of {\tt rect}}
+
+The user passes the $x$-coordinates {\tt x1, x2} 
+of the left and right
+edges and the $y$-coordinates {\tt y1, y2} of the
+bottom and top, and optionally the numbers of mesh points 
+{\tt nx, ny} in
+the $x$ and $y$ directions. A call looks like
+\begin{equation}
+ {\tt r = rect(x1,x2,y1,y2,nx,ny);}
+\end{equation}
+If {\tt nx, ny} not passed, a mesh of the rectangular
+region will be created later if needed.
+
+\subsection{{\tt rect} properties and methods}
+
+\begin{description}
+ \item[Properties]
+   \begin{itemize}
+    \item[]
+    \item {\tt x1,x2,y1,y2,nx,ny} as described above
+    \item {\tt X,Y} are the outputs of meshgrid used for
+          making 3d plots and contour plots
+    \item {\tt Z} is {\tt X + 1i*Y}
+   \end{itemize}
+ \item[Methods]
+   \begin{itemize}
+    \item[]
+    \item {\tt set\_mesh(obj,nx,ny)} sets the properties
+          {\tt nx,ny,X,Y,Z}
+    \item {\tt contains(obj,pts)} returns a boolean vector
+          indicating which points in the vector {\tt pts}
+          are inside the rectangle
+    \item {\tt focus(obj,buff)} moves the viewing window to
+          the rectangle plus a buffer--the buffer defaults to
+          0 if none is passed
+    \item {\tt log10contour(obj,f)} plots the contours of
+          $\log_{10}(f(z))$
+    \item {\tt draw(obj)} draws the rectangle
+   \end{itemize}
+\end{description}
+
+\subsection{Creating an instance of {\tt ellipse}}
+
+The ellipse is thought of as a parametrized curve
+\begin{equation}
+ \varphi(t) = c + e^{i\theta}\left(a\cos(2\pi t) + ib\sin(2\pi t)\right),
+ \qquad
+ [0,1)
+\end{equation}
+in the complex plane, where
+\begin{itemize}
+ \item $a$ and $b$ are its two radii,
+ \item $\theta$ is a rotation angle, and
+ \item $c$ is the position of its center.
+\end{itemize}
+To create an object representing this ellipse, do
+\begin{equation}
+ {\tt ell = ellipse(c,theta,a,b,[],[]);}
+\end{equation}
+At the time of creation the user can also specify a mesh of this region 
+with {\tt nx, ny} equal to the number of mesh points in the
+$x$ and $y$ directions:
+\begin{equation}
+ {\tt ell = ellipse(c,theta,a,b,nx,ny);}
+\end{equation}
+
+\subsection{{\tt ellipse} properties and methods}
+
+The object stores the anatomy of the ellipse plus some convenience
+functions.
+
+\begin{description}
+ \item[Properties]
+   \begin{itemize}
+    \item[]
+    \item {\tt c, theta, a, b} as described above
+    \item {\tt f1,f2} the foci
+    \item {\tt R} is the sum of the distances from any
+          point on the ellipse to the two foci
+    \item {\tt bb} is a {\tt rect} instance representing 
+          a ``bounding box'' for the ellipse, i.e.
+          the smallest rectangle that contains the ellipse
+    \item {\tt X,Y} holds a mesh of the bounding box,
+          created with a {\tt meshgrid()} call
+    \item {\tt Z} equals {\tt X + 1i*Y}
+   \end{itemize}
+ \item[Methods]
+   \begin{itemize}
+    \item[]
+    \item {\tt set\_mesh(obj,nx,ny)} sets up {\tt X,Y,Z}
+    \item {\tt contains(obj,pts)} returns a boolean vector saying
+          which points in {\tt pts} are in the ellipse
+    \item {\tt phi(obj,t)} is the parametrization described above
+    \item {\tt dphi(obj,t)} is the parametrization of $\varphi'(t)$
+    \item {\tt draw(obj)} draws a picture of the ellipse
+    \item {\tt focus(obj,buff)} moves the viewing window to the bounding
+          box plus a buffer around the edge--the default in case {\tt buff}
+          is not passed is 0
+   \end{itemize}
+\end{description}
+

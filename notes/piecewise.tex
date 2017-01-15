@@ -1,0 +1,208 @@
+\section{Piecewise discretizations in $r$ direction}
+\label{sec-piecewise}
+
+This is all well and good, but we might want to discretize
+intervals $[0,R_1]$, $[R_1,R_2]$, etc. in the $r$ direction separately
+(specifically in the case where $V$ is axisymmetric but only
+piecewise continuous). To be specific, suppose we want to mesh $[0,R_1]$ and
+$[R_1,R_2]$ separately with $\hat{r}_1$ and $\hat{r}_2$ (note that
+the last component of $\hat{r}_1$ will be equal to the first
+component of $\hat{r}_2$, and $\hat{r}_2$ will be a full Chebyshev
+mesh). If we want to discretize how the Laplacian acts on
+$[\hat{r}_1, \hat{r}_2]$, we have to rework things a bit. Let's start
+with the discretization of $\partial/\partial r$.
+
+Using our work above and letting $D_r$ be the Chebyshev differentiation
+matrix for the interval $[R_1,R_2]$,
+we have
+\begin{align*}
+ \left[
+ \begin{array}{c|c}
+  I_{2N} \otimes E_4 +
+  \begin{bmatrix}
+   0   & I_N \\
+   I_N & 0
+  \end{bmatrix} \otimes \tilde{E}_3 &    \\ \hline
+  &
+  \begin{array}{cccc}
+   D_r &     &        & \\
+       & D_r &        & \\
+       &     & \ddots & \\
+       &     &        & D_r
+  \end{array}
+ \end{array}
+ \right]
+ \begin{bmatrix}
+  \psi(\hat{r}_1,\theta_1) \\ \vdots \\ \psi(\hat{r}_1,\theta_{2N}) \\ \hline
+  \psi(\hat{r}_2,\theta_1) \\ \vdots \\ \psi(\hat{r}_2,\theta_{2N})
+ \end{bmatrix}
+ =
+ \begin{bmatrix}
+  \psi_r(\hat{r}_1,\theta_1) \\ \vdots \\ \psi_r(\hat{r}_1,\theta_{2N}) \\ \hline
+  \psi_r(\hat{r}_2,\theta_1) \\ \vdots \\ \psi_r(\hat{r}_2,\theta_{2N})
+ \end{bmatrix}.
+\end{align*}
+For the case $N = 2$, this is
+\begin{align*}
+ \left[
+  \begin{array}{c|c}
+   \begin{array}{c|c}
+    \begin{array}{cc} E_4 &  \\   & E_4 \end{array}
+    &
+    \begin{array}{cc} \tilde{E}_3 & \\ & \tilde{E}_3 \end{array} \\ \hline
+    \begin{array}{cc} \tilde{E}_3 & \\ & \tilde{E}_3 \end{array}
+    &
+    \begin{array}{cc} E_4 & \\ & E_4 \end{array}
+   \end{array}
+  & \\ \hline
+  &
+  \begin{array}{cccc}
+   D_r &     &     & \\
+       & D_r &     & \\
+       &     & D_r & \\
+       &     &     & D_r
+  \end{array}
+ \end{array}
+ \right]
+ \begin{bmatrix}
+  \psi(\hat{r}_1,\theta_1) \\
+  \psi(\hat{r}_1,\theta_2) \\
+  \psi(\hat{r}_1,\theta_3) \\
+  \psi(\hat{r}_1,\theta_4) \\ \hline
+  \psi(\hat{r}_2,\theta_1) \\
+  \psi(\hat{r}_2,\theta_2) \\
+  \psi(\hat{r}_2,\theta_3) \\
+  \psi(\hat{r}_2,\theta_4)
+ \end{bmatrix}
+ =
+ \begin{bmatrix}
+  \psi_r(\hat{r}_1,\theta_1) \\
+  \psi_r(\hat{r}_1,\theta_2) \\
+  \psi_r(\hat{r}_1,\theta_3) \\
+  \psi_r(\hat{r}_1,\theta_4) \\ \hline
+  \psi_r(\hat{r}_2,\theta_1) \\
+  \psi_r(\hat{r}_2,\theta_2) \\
+  \psi_r(\hat{r}_2,\theta_3) \\
+  \psi_r(\hat{r}_2,\theta_4)
+ \end{bmatrix}
+\end{align*}
+which we can rewrite as
+\begin{align*}
+ \left[
+ \begin{array}{c|c}
+  \begin{array}{cccc}
+   E_4 &     &     & \\
+       & D_r &     & \\
+       &     & E_4 & \\
+       &     &     & D_r
+  \end{array}
+  &
+  \begin{array}{cccc}
+   \tilde{E}_3 & \quad &             & \quad \\
+               & \quad &             & \quad \\
+               & \quad & \tilde{E}_3 & \quad \\
+               & \quad &             & \quad
+  \end{array}
+  \\ \hline
+  \begin{array}{cccc}
+   \tilde{E}_3 & \quad &             & \quad \\
+               & \quad &             & \quad \\
+               & \quad & \tilde{E}_3 & \quad \\
+               & \quad &             & \quad
+  \end{array}
+  &
+  \begin{array}{cccc}
+   E_4 &     &     & \\
+       & D_r &     & \\
+       &     & E_4 & \\
+       &     &     & D_r
+  \end{array}
+ \end{array}
+ \right]
+ \begin{bmatrix}
+  \psi(\hat{r}_1,\theta_1) \\
+  \psi(\hat{r}_2,\theta_1) \\
+  \psi(\hat{r}_1,\theta_2) \\
+  \psi(\hat{r}_2,\theta_2) \\ \hline
+  \psi(\hat{r}_1,\theta_3) \\
+  \psi(\hat{r}_2,\theta_3) \\
+  \psi(\hat{r}_1,\theta_4) \\
+  \psi(\hat{r}_2,\theta_4)
+ \end{bmatrix}
+ =
+ \begin{bmatrix}
+  \psi_r(\hat{r}_1,\theta_1) \\
+  \psi_r(\hat{r}_2,\theta_1) \\
+  \psi_r(\hat{r}_1,\theta_2) \\
+  \psi_r(\hat{r}_2,\theta_2) \\ \hline
+  \psi_r(\hat{r}_1,\theta_3) \\
+  \psi_r(\hat{r}_2,\theta_3) \\
+  \psi_r(\hat{r}_1,\theta_4) \\
+  \psi_r(\hat{r}_2,\theta_4)
+ \end{bmatrix}.
+\end{align*}
+Now the pattern can be seen, and so if $\hat{r}$ is the concatenation
+of $n$ piecewise discretizations, the first being a half Chebyshev
+mesh and the others being Chebyshev meshes with derivative matrices
+$D_r^{(j)}$, $j = 2,3,...n$, we get
+\begin{align*}
+ \left(
+  I_{2N} \otimes
+  \underbrace{
+  \begin{bmatrix}
+   E_4 &           &        & \\
+       & D_r^{(2)} &        & \\
+       &           & \ddots & \\
+       &           &        & D_r^{(n)}
+  \end{bmatrix}
+  }_{\tt Dr\_I}
+   +
+  \begin{bmatrix} 0 & I_N \\ I_N & 0 \end{bmatrix} \otimes
+  \underbrace{
+  \begin{bmatrix}
+   \tilde{E}_3 &   &        & \\
+               & 0 &        & \\
+               &   & \ddots & \\
+               &   &        & 0
+  \end{bmatrix}
+  }_{\tt Dr\_J}
+ \right)
+ \begin{bmatrix}
+  \psi(\hat{r},\theta_1) \\ \vdots \\ \psi(\hat{r},\theta_{2N})
+ \end{bmatrix}
+ =
+ \begin{bmatrix}
+  \psi_r(\hat{r},\theta_1) \\ \vdots \\ \psi_r(\hat{r},\theta_{2N})
+ \end{bmatrix}.
+\end{align*}
+Similarly,
+\begin{align*}
+ \left(
+  I_{2N} \otimes
+  \underbrace{
+  \begin{bmatrix}
+   D_4 &              &        & \\
+       & D_{rr}^{(2)} &        & \\
+       &              & \ddots & \\
+       &              &        & D_{rr}^{(n)}
+  \end{bmatrix} 
+  }_{\tt Drr\_I}
+  +
+  \begin{bmatrix} 0 & I_N \\ I_N & 0 \end{bmatrix} \otimes
+  \underbrace{
+  \begin{bmatrix}
+   \tilde{D}_3 &   &        & \\
+               & 0 &        & \\
+               &   & \ddots & \\
+               &   &        & 0
+  \end{bmatrix}
+  }_{\tt Drr\_J}
+ \right)
+ \begin{bmatrix}
+  \psi(\hat{r},\theta_1) \\ \vdots \\ \psi(\hat{r},\theta_{2N})
+ \end{bmatrix}
+ =
+ \begin{bmatrix}
+  \psi_{rr}(\hat{r},\theta_1) \\ \vdots \\ \psi_{rr}(\hat{r},\theta_{2N})
+ \end{bmatrix}.
+\end{align*}

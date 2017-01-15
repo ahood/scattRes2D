@@ -1,0 +1,273 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>demo_three_bumps_sparse</title><meta name="generator" content="MATLAB 8.3"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2017-01-14"><meta name="DC.source" content="demo_three_bumps_sparse.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#3">Define the potential from the paper and discretize</a></li><li><a href="#7">Pick a region to look at</a></li><li><a href="#11">Do a scattering computation as a sanity check</a></li><li><a href="#17">Resonance computation</a></li></ul></div><pre class="codeinput"><span class="keyword">function</span> demo_three_bumps_sparse
+</pre><pre class="codeinput"><span class="comment">% This demo is the sparse version of demo_three_bumps.m. Sparse</span>
+<span class="comment">% computations are attractive because a finer mesh and better rational</span>
+<span class="comment">% approximations lead to much larger (but sparse!) eigenvalue problems.</span>
+<span class="comment">% Storing the matrices in dense form leads to memory errors.</span>
+<span class="comment">% The sparse versions of the various objects created in demo_three_bumps.m</span>
+<span class="comment">% are much faster to set up, but resonance computation using them is</span>
+<span class="comment">% infeasible at this time due to the lack of a decent preconditioner.</span>
+<span class="comment">% TODO: find a good preconditioner or a better basis!</span>
+<span class="comment">%</span>
+<span class="comment">% Because the eigenvalue computation is impossibly time-consuming, we</span>
+<span class="comment">% return beforehand. See the "publish"-ed version of this m-file in the</span>
+<span class="comment">% html folder.</span>
+
+clear <span class="string">all</span>
+close <span class="string">all</span>
+addpath(<span class="string">'..'</span>)
+addpath(<span class="string">'../tests'</span>)
+</pre><h2>Define the potential from the paper and discretize<a name="3"></a></h2><pre class="codeinput">Rcenters = 1.4;
+sigma = 1/3;
+hbar = 0.025;
+laplaceCoeff = hbar^2/2;
+c = Rcenters*exp(2i*pi*(1:3)/3);
+G = @(x,y,cj) exp(-abs(x+1i*y-cj).^2/2/sigma^2);
+V = @(x,y) (G(x,y,c(1)) + G(x,y,c(2)) + G(x,y,c(3)))/laplaceCoeff;
+coords = <span class="string">'rect'</span>;
+</pre><p>Sanity check to see we got almost all volume.</p><pre class="codeinput">cdist = 2.5;
+R = Rcenters + cdist;
+resid = V(R,0);
+fprintf(<span class="string">'Potential height at truncation radius = %f is %4.2e\n'</span>, R, resid);
+</pre><pre class="codeoutput">Potential height at truncation radius = 3.900000 is 1.95e-09
+</pre><p>Choose parameters for dtn problem and rational approximation.</p><pre class="codeinput">Nt = 110;
+Nr = 110;
+N = 80;
+
+dtns = DtNBC_sparse(Nt,Nr,{V},coords,R);
+</pre><p>Check the potential looks right.</p><pre class="codeinput">figure, u = dtns.plotFun(V,<span class="string">'potential'</span>,@real,coords);
+</pre><img vspace="5" hspace="5" src="demo_three_bumps_sparse_01.png" alt=""> <h2>Pick a region to look at<a name="7"></a></h2><p>From Lin's paper.</p><pre class="codeinput">E0lin = 0.5; dElin = 0.1; ylin = -hbar; <span class="comment">% from Lin's paper Fig 14 (top of rectangle is at zero)</span>
+innerRec_lin = rect(E0lin-dElin,E0lin+dElin, ylin, 0, [], []);
+outerRec_lin = rect(0.2, 0.8, -0.045, 0, [], []);
+</pre><p>Scaled for our basis (could also scale B instead).</p><pre class="codeinput">E0 = E0lin/laplaceCoeff; dE = dElin/laplaceCoeff; y = ylin/laplaceCoeff;
+innerRec = rect(E0-dE,E0+dE,y,0,[],[]);
+<span class="comment">% pick ellipse that contains it</span>
+c = E0 + 1i*(innerRec.y1 + innerRec.y2)/2;
+b = (innerRec.y2 - innerRec.y1)/2 + dE; a = 2*dE;
+ell = ellipse(c,0,a,b,[],[]);
+<span class="comment">% make a rectangle containing the ellipse</span>
+buff = 1;
+x1 = real(ell.c) - ell.a - buff; x2 = real(ell.c) + ell.a + buff;
+y1 = imag(ell.c) - ell.b - buff; y2 = imag(ell.c) + ell.b + buff;
+outerRec = rect(x1,x2,y1,y2,100,100);
+</pre><p>Define a rational approximation that is good on the ellipse ell.</p><pre class="codeinput">rats = ratApproxDtNBC_sparse(dtns,ell,1,N);
+</pre><h2>Do a scattering computation as a sanity check<a name="11"></a></h2><p>Define incident wave energy</p><pre class="codeinput">z = ell.c; <span class="comment">% choose center of ellipse as incident wave energy</span>
+k = sqrt(z);
+</pre><p>Compute scattered wave.</p><pre class="codeinput">dtnscatt = dtns.solve(k); dtnrect = reshape(dtnscatt,dtns.Nr,dtns.Nt);
+ratscatt = rats.solve(k); ratrect = reshape(ratscatt,dtns.Nr,dtns.Nt);
+</pre><pre class="codeoutput">Warning: Input tol may not be achievable by GMRES.
+ Try to use a bigger tolerance. 
+Warning: Input tol may not be achievable by GMRES.
+ Try to use a bigger tolerance. 
+</pre><p>Error at mesh points.</p><pre class="codeinput">[abserr,relerr] = get_err(dtnscatt,ratscatt);
+fprintf(<span class="string">'l2 error between dtn and dtn_rat sols: %4.2e, %4.2e\n'</span>, abserr, relerr);
+</pre><pre class="codeoutput">l2 error between dtn and dtn_rat sols: 3.31e-08, 4.58e-11
+</pre><p>Problem we want small residuals with respect to.</p><pre class="codeinput">Tfun = @(z,x0) dtns.apply_T(x0, rats.mysqrt(z));
+</pre><p>Show the region, show DtN map approx error, poles of DtN map (if any).</p><pre class="codeinput">figure, hold <span class="string">all</span>
+ell.draw()
+innerRec.draw()
+outerRec.draw()
+rats.show_poles(outerRec)
+rats.show_error(outerRec)
+outerRec.focus(0);
+axis <span class="string">equal</span>
+legend(<span class="string">'ellipse'</span>,<span class="string">'inner rect'</span>,<span class="string">'outer rect'</span>);
+</pre><img vspace="5" hspace="5" src="demo_three_bumps_sparse_02.png" alt=""> <h2>Resonance computation<a name="17"></a></h2><p>Get eigenvalues of rational approximation (some spurious). Considering how slow the scattering computations were above (just 1 solve!), it is clearly infeasible to do the eigenvalue computation we need to do. A better preconditioner is needed. Alternatively, we need a different basis.</p><pre class="codeinput"><span class="keyword">return</span>
+
+Neigs = min(dtns.Nt*dtns.Nr/2, 300); <span class="comment">% look for this many</span>
+[resvecs,resvals] = rats.resonances(Neigs,ell.c);
+</pre><p>In our units, the resonance estimates are in the vector resvals. See the end of demo_three_bumps.m for how to scale and plot them and compare to Fig. 14 in Lin's paper.</p><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+function demo_three_bumps_sparse
+% This demo is the sparse version of demo_three_bumps.m. Sparse
+% computations are attractive because a finer mesh and better rational
+% approximations lead to much larger (but sparse!) eigenvalue problems.
+% Storing the matrices in dense form leads to memory errors.
+% The sparse versions of the various objects created in demo_three_bumps.m
+% are much faster to set up, but resonance computation using them is 
+% infeasible at this time due to the lack of a decent preconditioner.
+% TODO: find a good preconditioner or a better basis!
+%
+% Because the eigenvalue computation is impossibly time-consuming, we
+% return beforehand. See the "publish"-ed version of this m-file in the
+% html folder.
+
+clear all
+close all
+addpath('..')
+addpath('../tests')
+
+%% Define the potential from the paper and discretize
+Rcenters = 1.4;
+sigma = 1/3;
+hbar = 0.025;
+laplaceCoeff = hbar^2/2;
+c = Rcenters*exp(2i*pi*(1:3)/3);
+G = @(x,y,cj) exp(-abs(x+1i*y-cj).^2/2/sigma^2);
+V = @(x,y) (G(x,y,c(1)) + G(x,y,c(2)) + G(x,y,c(3)))/laplaceCoeff;
+coords = 'rect';
+
+%%
+% Sanity check to see we got almost all volume.
+cdist = 2.5;
+R = Rcenters + cdist;
+resid = V(R,0);
+fprintf('Potential height at truncation radius = %f is %4.2e\n', R, resid);
+
+%%
+% Choose parameters for dtn problem and rational approximation.
+Nt = 110;
+Nr = 110;
+N = 80;
+
+dtns = DtNBC_sparse(Nt,Nr,{V},coords,R);
+
+%%
+% Check the potential looks right.
+figure, u = dtns.plotFun(V,'potential',@real,coords);
+
+%% Pick a region to look at
+
+%%
+% From Lin's paper.
+E0lin = 0.5; dElin = 0.1; ylin = -hbar; % from Lin's paper Fig 14 (top of rectangle is at zero)
+innerRec_lin = rect(E0lin-dElin,E0lin+dElin, ylin, 0, [], []);
+outerRec_lin = rect(0.2, 0.8, -0.045, 0, [], []);
+
+%%
+% Scaled for our basis (could also scale B instead).
+E0 = E0lin/laplaceCoeff; dE = dElin/laplaceCoeff; y = ylin/laplaceCoeff;
+innerRec = rect(E0-dE,E0+dE,y,0,[],[]);
+% pick ellipse that contains it 
+c = E0 + 1i*(innerRec.y1 + innerRec.y2)/2;
+b = (innerRec.y2 - innerRec.y1)/2 + dE; a = 2*dE;
+ell = ellipse(c,0,a,b,[],[]);
+% make a rectangle containing the ellipse
+buff = 1;
+x1 = real(ell.c) - ell.a - buff; x2 = real(ell.c) + ell.a + buff;
+y1 = imag(ell.c) - ell.b - buff; y2 = imag(ell.c) + ell.b + buff;
+outerRec = rect(x1,x2,y1,y2,100,100);
+
+%%
+% Define a rational approximation that is good on the ellipse ell.
+rats = ratApproxDtNBC_sparse(dtns,ell,1,N);
+
+%% Do a scattering computation as a sanity check
+
+%%
+% Define incident wave energy
+z = ell.c; % choose center of ellipse as incident wave energy
+k = sqrt(z);
+
+%%
+% Compute scattered wave.
+dtnscatt = dtns.solve(k); dtnrect = reshape(dtnscatt,dtns.Nr,dtns.Nt);
+ratscatt = rats.solve(k); ratrect = reshape(ratscatt,dtns.Nr,dtns.Nt);
+
+%%
+% Error at mesh points.
+[abserr,relerr] = get_err(dtnscatt,ratscatt);
+fprintf('l2 error between dtn and dtn_rat sols: %4.2e, %4.2e\n', abserr, relerr);
+
+%%
+% Problem we want small residuals with respect to.
+Tfun = @(z,x0) dtns.apply_T(x0, rats.mysqrt(z));
+
+%%
+% Show the region, show DtN map approx error, poles of DtN map (if any).
+figure, hold all
+ell.draw()
+innerRec.draw()
+outerRec.draw()
+rats.show_poles(outerRec)
+rats.show_error(outerRec)
+outerRec.focus(0);
+axis equal
+legend('ellipse','inner rect','outer rect');
+
+%% Resonance computation
+% Get eigenvalues of rational approximation (some spurious). Considering
+% how slow the scattering computations were above (just 1 solve!), it is
+% clearly infeasible to do the eigenvalue computation we need to do. A
+% better preconditioner is needed. Alternatively, we need a different
+% basis.
+
+return
+
+Neigs = min(dtns.Nt*dtns.Nr/2, 300); % look for this many
+[resvecs,resvals] = rats.resonances(Neigs,ell.c);
+
+%%
+% In our units, the resonance estimates are in the vector resvals. See the 
+% end of demo_three_bumps.m for how to scale and plot them and compare to
+% Fig. 14 in Lin's paper.
+
+##### SOURCE END #####
+--></body></html>

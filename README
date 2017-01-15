@@ -1,0 +1,12 @@
+This repository contains code for quantum scattering resonances in 2D. 
+Look in code/demos/ for examples. Look in notes/ for theoretical
+underpinnings (thesis.pdf, esp. Chapters 2 and 5) and a manual for a detailed
+description of the code itself (manual.pdf).
+
+NOTES:
+- You have to have chebfun (http://www.chebfun.org/) installed and on your path.
+- The axisymmetric versions of the problem objects are not described in the manual
+  but are used in a way similar to the non-axisymmetric ones.
+- Issues are annotated with "TODO".
+
+

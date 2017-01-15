@@ -1,0 +1,87 @@
+\section{{\tt ratApproxDtNBC}}
+\label{sec-ratApproxDtNBC}
+
+We've finally arrived at the object that will let us
+compute resonances using the DtN map boundary condition.
+Recall that what we
+really care about is $E = k^2$ (resonance energies). So, the
+user should be specifying a region in which to look for
+$E$'s, not $k$'s. But rewriting $\dtnT(k)$ in terms of $E$ introduces
+a square root. So, the user needs to specify which branch of
+the square root to use.
+\begin{equation}
+\begin{aligned}
+ \text{first  branch} &\qquad z &\mapsto  \sqrt{z} \\
+ \text{second branch} &\qquad z &\mapsto -\sqrt{z}
+\end{aligned}
+\end{equation}
+Having chosen a mapping $E \mapsto k$, the code will 
+create matrices $A$ and $B$ such that
+$\ratT_{\text{full}}(k) := \ratA - k^2 \ratB$ has Schur complement
+\begin{equation}
+ \ratT(k) = \dtnA - k^2 \dtnB + \ratC(k),
+\end{equation}
+where $\ratC(k) \approx \dtnC(k)$.
+
+\subsection{Creating a {\tt ratApproxDtNBC} instance}
+
+We'll obviously need everything we needed to make a
+{\tt DtNBC} instance, so the easiest thing is to make
+and pass a {\tt DtNBC} instance (call it {\tt dtn}). 
+The user should also choose a region in which to look for
+resonance energies $E$ and a branch of the square root
+{\tt br}. Then make a {\tt ratApproxDtNBC} instance with
+\begin{verbatim}
+ >> rat = ratApproxDtNBC(dtn,ell,br);
+\end{verbatim}
+
+\subsection{Properties and methods}
+
+\begin{description}
+ \item[Properties]
+   \begin{itemize}
+    \item[]
+    \item {\tt A,B} are the matrices $\ratA$ and $\ratB$
+    \item {\tt fourierA12, fourierA21} are the matrices $\tilde{A}_{12}$ and
+          $\tilde{A}_{21}$ in Section~\ref{sec-preconditioners}, but are not
+          important to the user
+    \item {\tt Aschur} is the matrix whose eigenvalues are the same as
+          the finite eigenvalues of the $(\ratA,\ratB)$ pencil (obtained by
+          Schur complementing away the zero diagonal entries of $\ratB$)
+    \item {\tt br} is the branch of the square root specified by the user
+    \item {\tt dtn} is the {\tt DtNBC} instance passed by the user
+    \item {\tt ell} is the {\tt ellipse} instance passed by the user 
+    \item {\tt ratf} is a vector of {\tt ratApproxWithPoles}
+          instances, one for each component of the DtN map
+    \item {\tt poles} is a cell array holding the poles of each
+          component of the DtN map within the specified ellipse
+    \item {\tt sc} is a Schur complement object keeping track of how
+          to Schur complement $A-k^2 B$ into an approximation to $\dtnT(k)$
+   \end{itemize}
+ \item[Methods]
+   \begin{itemize}
+    \item[]
+    \item {\tt resonances(obj,n,E0,verbose)} returns the {\tt n}
+          resonance approximations closest to {\tt E0} and their
+          null vectors as the pair {\tt resvecs, resvals}
+    \item {\tt compute\_error(obj,r)} see {\tt ratApprox}
+    \item {\tt show\_error(obj,r)} ditto
+    \item {\tt show\_poles(obj,r)} ditto
+    \item {\tt T(obj,k)} returns the matrix $\ratT(k)$ described above
+    \item {\tt Tfull(obj,k)} returns the matrix $\ratT_{\text{full}}(k)$
+          described above
+   \end{itemize}
+\end{description}
+
+\subsection{Computing resonances}
+
+With an instance {\tt rat} created, 
+finding the $n$ approximate resonances
+close to the center of the ellipse 
+is done with
+\begin{verbatim}
+ >> [resvecs,resvals] = rat.resonances(n,ell.c);
+\end{verbatim}
+As you go farther from the center of the ellipse the
+approximations will first get less accurate and then 
+become spurious.

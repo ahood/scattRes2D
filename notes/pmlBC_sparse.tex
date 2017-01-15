@@ -1,0 +1,60 @@
+\subsection{{\tt pmlBC\_sparse}}
+\label{sec-pmlBC_sparse}
+
+With this object we can also do scattering
+computations, albeit only for the
+full mesh including PML region. 
+The properties and methods (in addition to those inherited) are:
+\begin{description}
+ \item[Properties]
+   \begin{itemize}
+    \item[]
+    \item {\tt s}, {\tt ss}, {\tt coords}
+          and {\tt pieces} are
+          all the same as the {\tt pmlBC} properties
+    \item {\tt ds}, {\tt d2s} are derivatives with respect
+          to original coordinate {\tt r} (not used by the user)
+    \item {\tt VvaluesVec} is a vector of potential values
+          at the mesh points
+   \end{itemize}
+ \item[Methods]
+   \begin{itemize}
+    \item[]
+    \item {\tt RHSfromFun(obj,incfun)}, 
+          {\tt RHSfromFun\_full(obj,incfun)}
+          are the same as the {\tt pmlBC} methods
+    \item {\tt apply\_op\_no\_bcs(obj,x0,E0,VvaluesVec)}
+          overrides the {\tt scattResComp2d\_sparse} method
+          to account for PML coordinate change
+    \item {\tt apply\_Tfull(obj,x0,k)} applies the
+          matrix $\pmlT_{\text{full}}(k)$ to vector {\tt x0}
+          without creating the matrix
+    \item {\tt apply\_Bfull(obj,x0)} applies the
+          matrix $\pmlB$ to vector {\tt x0}
+          without creating the matrix
+    \item {\tt apply\_pc\_full(obj,x0,k)} applies
+          $M(k)^{-1}$ to vector {\tt x0} without forming it,
+          where $M(k)$ is the default preconditioner for
+          the matrix $\pmlT_{\text{full}}(k)$
+    \item {\tt solve\_full(obj,k,incfun,precond,verbose)}
+          returns the vector of scattered wave values on the 
+          mesh that includes the PML region,
+          i.e. $\widehat{\scatt}^{(\text{ext})}$,
+          where the inputs {\tt incfun}, {\tt precond} and
+          {\tt verbose} are optional and defaults will be used
+          if they're not passed
+    \item {\tt eig\_comp(obj,n,E0,verbose)} computes the {\tt n} eigenvalues
+          of the pencil $(\pmlA,\pmlB)$ nearest to {\tt E0} and shows the {\tt gmres}
+          output if {\tt verbose} is true--the eigenvalues and their eigenvectors
+          are returned as the pair {\tt evecs, evals}
+   \end{itemize}
+\end{description}
+To do the
+scattering computation using the default incident wave
+and preconditioner (the identity for now)
+and suppress GMRES output, do
+\begin{verbatim}
+ >> k = 2; // wave number
+ >> pmls = pmlBC_sparse(Nt,Nrs_in,Nr_out,Vs,coords,Rs_in,R_out,l,dl,d2l);
+ >> scattValuesVec_ext = pmls.solve_full(k);
+\end{verbatim}

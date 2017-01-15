@@ -1,0 +1,47 @@
+\section{Solving the scattering problem}
+
+To solve~(\ref{eqtn-scattprob}), this code uses a
+spectral collocation approach. This means we approximate the
+values of the scattered wave on a Chebyshev-type mesh.
+Different
+boundary conditions correspond to different ways of
+approximating the outgoing boundary condition. 
+In the code, the discretization of the
+PDE in~(\ref{eqtn-scattprob}) with 
+each boundary condition corresponds
+to its own object:
+\begin{align*}
+ \text{Dirichlet boundary condition on boundary of
+  potential support}\quad\leftrightarrow\quad{\tt dirBC} \\
+ \text{PML plus Dirichlet boundary condition at outer edge}
+  \quad\leftrightarrow\quad{\tt pmlBC} \\
+ \text{DtN map boundary condition on boundary of potential
+  support}\quad\leftrightarrow\quad{\tt DtNBC}
+\end{align*}
+These three objects share many properties and methods 
+(e.g. for defining discretizations, methods for plotting, etc.), 
+so they are children of parent object {\tt scattResComp2d}.
+
+Before describing these objects, there are two more things
+to address.
+First, since the boundary conditions
+will be imposed at a certain radius, polar coordinates
+are the most convenient way to represent the scattering
+problem~(\ref{eqtn-scattprob}). In particular, it will
+be useful to have at hand the Laplacian in polar coordinates:
+\begin{equation}\label{eqtn-polarlaplacian}
+ \Delta = \frac{\partial^2}{\partial r^2} +
+          \frac{1}{r} \frac{\partial}{\partial r} +
+          \frac{1}{r^2} \frac{\partial^2}{\partial\theta^2}.
+\end{equation}
+Second, in all cases the discretization of~(\ref{eqtn-scattprob})
+will gives us a matrix equation
+\begin{equation}\label{eqtn-defT}
+ T(k) \widehat{\scatt} = -\widehat{V\inc}
+\end{equation}
+where the hat indicates evaluation on the user-specified mesh.
+The general form of $T(k)$ is $A - k^2 B + C(k)$, where
+$A - k^2 B$ encapsulates the PDE and linear parts of
+boundary conditions, and $C(k)$ holds the nonlinear parts of
+the boundary conditions (e.g. the DtN map). Therefore each
+of the child objects will have a method called {\tt T}.

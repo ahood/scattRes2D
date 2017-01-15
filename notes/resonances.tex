@@ -1,0 +1,114 @@
+\section{Resonances}
+\label{sec-resonances}
+
+Recall that given a piecewise smooth potential $V$ supported
+in $B(0,R)$, the resonance problem is to find energies
+$E = k^2$ such that
+\begin{equation}
+\begin{aligned}
+ \left(-\Delta + V - k^2\right)&\psi = 0 &\qquad\text{on } B(0,R) \\ 
+ &\psi \text{ outgoing} &\qquad\text{on } \partial B(0,R)
+\end{aligned}
+\end{equation}
+has a nonzero solution $\psi$. This came from taking the scattering
+problem~(\ref{eqtn-scattprob}) and setting $\inc$ equal to zero.
+Analogously, the discretized resonance problem is to find values of
+$E = k^2$ such that
+\begin{equation}
+ T(k)\widehat{\psi} = 0
+\end{equation}
+has a nonzero solution, where $T(k)$ is a matrix-valued
+function
+(compare with~(\ref{eqtn-defT})).
+Finding the values of $k$ such that $T(k)$ is a singular matrix is a
+nonlinear eigenvalue problem. As previously mentioned, though, $k$ 
+is not the quantity of interest. Instead, we will ultimately want
+to rephrase everything in terms of $E = k^2$. Therefore we'll look
+for the eigenvalues of $T(\sqrt{E})$ and $T(-\sqrt{E})$ (two problems
+corresponding to different branches of the square root).
+
+If Dirichlet boundary conditions are used, we're looking for
+eigenvalues of $\dirT(k) = \dirA - k^2 \dirB = \dirA - E \dirB$.
+So,
+finding resonance approximations is easy--just a generalized 
+eigenvalue problem. The trade-off is that the approximations will
+usually be lousy, and completely irrelevant ``far''
+from the origin. To compute them in the code, just create
+a {\tt dirBC} instance (call it {\tt dir}) and do
+\begin{verbatim}
+ >> dir.eig_comp();
+\end{verbatim}
+and then access the eigenvalues through the property {\tt dir.evals}.
+The {\tt dirBC\_sparse.eig\_comp()} method requires the user to
+pass in {\tt E0} and {\tt n} and the $n$ eigenvalues nearest to
+$E_0 \in \bbC$ will be returned. If {\tt dirs} is a
+{\tt dirBC\_sparse} instance, a call looks like
+\begin{verbatim}
+ >> n = 10;
+ >> E0 = 2;
+ >> [evecs,evals] = dirs.eig_comp(E0,n);
+\end{verbatim}
+To see the {\tt gmres()} output generated during the call, pass {\tt 1}
+as an additional argument.
+
+If we use a PML with Dirichlet boundary conditions, things are
+a little more complicated, because 
+$\pmlT(k) = A_{11} - E B_{11} + \pmlC(k)$
+and $\pmlC(k) = -A_{12} \left(A_{22} - E B_{22}\right)^{-1} A_{21}$.
+But this is still not too bad--a rational eigenvalue problem. 
+A little Gaussian elimination shows that
+its eigenvalues are the eigenvalues of 
+$T_{\text{full}}(k) = \pmlA - E \pmlB$, so again we have a
+generalized eigenvalue problem.
+
+Now, some of the resonance
+approximations can be made pretty good by choosing the right PML. 
+But no matter what PML is chosen
+\begin{itemize} 
+ \item accuracy will always be best near the origin and diminish
+       as you walk away from it, and
+ \item a prerequisite to a larger region of accuracy  
+       is a larger mesh, i.e. 
+       it takes more computing time and memory to set up and solve
+       for resonance approximations that are far from the origin.
+\end{itemize}
+Furthermore, if the user is interested in resonances in a region
+far from the origin, it's not clear how to choose PML parameters
+to give the required level of accuracy in that region.
+Having said that, computing resonance approximations is 
+done the same way as for the {\tt dirBC} instance:
+\begin{verbatim}
+ >> pml.eig_comp();
+\end{verbatim}
+where {\tt pml} is an instance of {\tt pmlBC}
+set up with the PML of choice. If {\tt pmls} is a {\tt pmlBC\_sparse}
+instance, computing eigenvalues looks like
+\begin{verbatim}
+ >> n = 10; 
+ >> E0 = 2;
+ >> verbose = 1;
+ >> [evecs,evals] = pmls.eig_comp(n,E0,verbose);
+\end{verbatim}
+
+The DtN map boundary condition is the only one of these three that 
+can exactly enforce that the solution wave is outgoing on
+$\partial B(0,R)$. But this boundary condition leads to 
+$\dtnT(k) = \dtnA - k^2 \dtnB + \dtnC(k)$, where
+$\dtnC(k)$ is a matrix-valued function where entries involve
+ratios of Hankel functions and $k$ appears instead of its square. 
+This is not a rational eigenvalue problem
+like in the case of the PML + Dirichlet boundary condition, so 
+it can't be solved exactly. However, if the user specifies a region
+of $E$ values in which to look for resonances, we can get
+good resonance approximations in that region by approximating
+$\dtnC(k)$ by a customizable rational function. As for the
+appearance of $k$, not its square,
+in $\dtnC(k)$, a branch for $k$ has to be chosen in order to
+do a resonance computation.
+The {\tt ratApproxDtNBC}
+and {\tt ratApproxDtNBC\_sparse} objects will hold the rational
+approximation information and the method for resonance computation
+given the branch choice.
+The following sections will go through the above process step by step,
+starting with how to specify a region of interest.
+

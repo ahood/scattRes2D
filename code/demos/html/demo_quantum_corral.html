@@ -1,0 +1,744 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>demo_quantum_corral</title><meta name="generator" content="MATLAB 8.3"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2017-01-14"><meta name="DC.source" content="demo_quantum_corral.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#3">Set-up for particle-in-a-box and more realistic potential</a></li><li><a href="#10">Visual comparison</a></li><li><a href="#12">Sensitivity analysis for PIB resonances via Schur complement</a></li><li><a href="#25">Comparison with rational approximation resonances via pseudospectral localization</a></li><li><a href="#35">Look for resonances in a region far from the origin</a></li></ul></div><pre class="codeinput"><span class="keyword">function</span> demo_quantum_corral
+</pre><pre class="codeinput"><span class="comment">% This demo compares the calculated resonances for a circular quantum</span>
+<span class="comment">% corral coming from two different potentials used in elastic scattering</span>
+<span class="comment">% models.</span>
+<span class="comment">% A piecewise mesh in the radial direction is used to facilitate the</span>
+<span class="comment">% comparison.</span>
+<span class="comment">% The use of pseudospectral localization and first order perturbation</span>
+<span class="comment">% theory are demonstrated in this example. See Ch. 5 of Localizing the</span>
+<span class="comment">% Eigenvalues of Matrix-valued Functions by A. Hood (my dissertation) for</span>
+<span class="comment">% discussion.</span>
+<span class="comment">%</span>
+<span class="comment">% The user is recommended to read the "publish"-ed version in the html</span>
+<span class="comment">% folder rather than invoking this file directly.</span>
+
+close <span class="string">all</span>
+clear <span class="string">all</span>
+addpath(pwd);
+addpath([pwd <span class="string">'/test'</span>]);
+</pre><h2>Set-up for particle-in-a-box and more realistic potential<a name="3"></a></h2><p>The quantum corral we have in mind consists of iron atoms placed in a circle on a copper metal surface. The resonances predicted by a particle-in-a-box model (no quantum tunneling) agree pretty well with experiment. For comparison, we will use a very simple model that assumes the potential due to the iron atoms is axisymmetric (as does the particle-in-a-box model) but permits quantum tunneling. Again, see my dissertation for details and references.</p><pre class="codeinput">R = 1; <span class="comment">% radius of corral (to center of iron adatoms)</span>
+</pre><p>More realistic potential parameters - now quantum tunneling can happen. The potential is a circular wall centered on the circle of radius R.</p><pre class="codeinput">w = 0.1; <span class="comment">% width of axisymmetric wall</span>
+V0 = 430; <span class="comment">% height " " "</span>
+Rin  = R - w/2;
+Rout = R + w/2;
+<span class="comment">% potential defined piecewise, so mesh must be defined piecewise, too</span>
+dtn_Vs = {@(r,t) 0*r, @(r,t) 0*r + V0};
+coords = <span class="string">'polar'</span>;
+</pre><p>For compatibility, define the potential for the particle-in-a-box model piecewise as well.</p><pre class="codeinput">pib_Vs = {@(r,t) 0*r, @(r,t) 0*r};
+</pre><p>The mesh for the particle-in-a-box model and the object instance we'll use. The particle-in-a-box model essentially boils down to imposing Dirichlet boundary conditions. Note that we are using an object that explicitly uses the assumption of axisymmetry.</p><pre class="codeinput">Nt = 40;
+pib_Nrs = [40,10];
+pib_Rs = [Rin,R];
+pib = dirBC_axisymm(Nt,pib_Nrs,pib_Vs,coords,pib_Rs); <span class="comment">% PIB model has Dir BCs</span>
+</pre><p>As a sanity check, make sure the square roots of resonances we predict (k = sqrt(E)) using pib are correct (they correspond to zeros of bessel functions).</p><pre class="codeinput">pib.eig_comp();
+
+figure
+<span class="keyword">for</span> n = 0:3
+    j = Nt/2 + n;
+    subplot(2,2,n+1), hold <span class="string">all</span>
+    plot(pib.ks{j},0*pib.ks{j}, <span class="string">'*'</span>);
+    ks = linspace(0,100,1000);
+    plot(ks,besselj(n,ks)/pib.Rs(end));
+    axis([0 50 -0.5 0.5])
+    title([<span class="string">'PIB eigs and zeros of bessel(n,:) for n = '</span> num2str(n)]);
+<span class="keyword">end</span>
+</pre><img vspace="5" hspace="5" src="demo_quantum_corral_01.png" alt=""> <p>The mesh for the more realistic model that permits quantum tunneling and an object instance that imposes exact boundary conditions and uses axisymmetry explicitly.</p><pre class="codeinput">dtn_Nrs = [pib_Nrs(1), 2*pib_Nrs(2)];
+dtn_Rs = [Rin,Rout];
+dtn = DtNBC_axisymm(Nt,dtn_Nrs,dtn_Vs,coords,dtn_Rs);
+</pre><p>Picture of potential cross-sections and meshes as a sanity check.</p><pre class="codeinput">sf = 0.1; <span class="comment">% parameter for shifting labels around</span>
+figure, hold <span class="string">all</span>
+plot(sf*[0,R,R,Rout + w/2], sf*[0,0,2*V0,2*V0]); <span class="comment">% PIB potential (infinite circular box)</span>
+plot(sf*[0,Rin,Rin,Rout,Rout,Rout+w/2],sf*[0,0,V0,V0,0,0]); <span class="comment">% circular wall</span>
+plot(sf*pib.r,sf*-100,<span class="string">'b.'</span>,<span class="string">'markersize'</span>,10); <span class="comment">% mesh for PIB</span>
+plot(sf*dtn.r,sf*-200,<span class="string">'.'</span>,<span class="string">'color'</span>,[0 0.4 0],<span class="string">'markersize'</span>,10); <span class="comment">% mesh for other one</span>
+<span class="comment">% label 0, R1 = Rin, R, R2 = Rout</span>
+set(gca, <span class="string">'xtick'</span>, sf*[0, Rin, R, Rout]);
+set(gca, <span class="string">'xticklabel'</span>, []);
+xoff = sf*0.01;
+xlabely = sf*(-2*V0/3 - 30);
+text(0      -xoff/2,xlabely,<span class="string">'$0$'</span>  ,<span class="string">'interpreter'</span>,<span class="string">'latex'</span>,<span class="string">'verticalalignment'</span>,<span class="string">'top'</span>,<span class="string">'fontsize'</span>,14);
+text(sf*Rin -2*xoff,xlabely,<span class="string">'$R_1$'</span>,<span class="string">'interpreter'</span>,<span class="string">'latex'</span>,<span class="string">'verticalalignment'</span>,<span class="string">'top'</span>,<span class="string">'fontsize'</span>,14);
+text(sf*R   -xoff,xlabely,<span class="string">'$R$'</span>  ,<span class="string">'interpreter'</span>,<span class="string">'latex'</span>,<span class="string">'verticalalignment'</span>,<span class="string">'top'</span>,<span class="string">'fontsize'</span>,14);
+text(sf*Rout-xoff,xlabely,<span class="string">'$R_2$'</span>,<span class="string">'interpreter'</span>,<span class="string">'latex'</span>,<span class="string">'verticalalignment'</span>,<span class="string">'top'</span>,<span class="string">'fontsize'</span>,14);
+<span class="comment">% label 0, V0, and infinity</span>
+set(gca, <span class="string">'ytick'</span>, sf*[0, V0, 2*V0]);
+set(gca, <span class="string">'yticklabel'</span>, []);
+ylabelx = -0.003;
+text(ylabelx, sf*0, <span class="string">'$0$'</span>, <span class="string">'interpreter'</span>, <span class="string">'latex'</span>,<span class="string">'horizontalalignment'</span>,<span class="string">'right'</span>,<span class="string">'fontsize'</span>,14);
+text(ylabelx, sf*V0, <span class="string">'$V_0$'</span>, <span class="string">'interpreter'</span>, <span class="string">'latex'</span>,<span class="string">'horizontalalignment'</span>,<span class="string">'right'</span>,<span class="string">'fontsize'</span>,14);
+text(ylabelx, sf*2*V0, <span class="string">'$\infty$'</span>, <span class="string">'interpreter'</span>, <span class="string">'latex'</span>,<span class="string">'horizontalalignment'</span>,<span class="string">'right'</span>,<span class="string">'fontsize'</span>,14);
+
+axis(sf*[0, Rout+w, -2*V0/3, 2*V0 + 50])
+</pre><img vspace="5" hspace="5" src="demo_quantum_corral_02.png" alt=""> <h2>Visual comparison<a name="10"></a></h2><p>The axisymmetry assumption allowed us to break down the resonance problem into a sequence of nonlinear eigenvalue problems indexed by integers n. Here are pseudospectral plots for the relevant matrix-valued functions from the more realistic model for n = 0:3. These contour plots suggest the locations of resonances predicted by the realistic model. The resonances predicted by the particle-in-a-box model are plotted on top of the pseudospectral plots.</p><pre class="codeinput"><span class="comment">% Compute the pseudospectral plot over this region with mesh parameters nx</span>
+<span class="comment">% = 500 and ny = 10.</span>
+r = rect(1,50,-0.5,0.5,500,10);
+
+figure, hold <span class="string">on</span>
+<span class="keyword">for</span> n = 0:3
+    j = Nt/2 + n;
+    subplot(4,1,n+1), hold <span class="string">on</span>
+    r.log10contour(@(k) min(svd(dtn.T_fc_j(k,j))),0);
+    plot(real(pib.ks{j}), imag(pib.ks{j}), <span class="string">'*'</span>);
+    r.focus();
+    title([<span class="string">'n = '</span> num2str(n)]);
+    box <span class="string">on</span>
+<span class="keyword">end</span>
+</pre><img vspace="5" hspace="5" src="demo_quantum_corral_03.png" alt=""> <p>We can see that the square roots k of resonances E predicted by the particle-in-a-box model are decent approximations to the corresponding k values predicted by the realistic model near the origin, but can't capture the imaginary parts of the latter away from the origin. The imaginary parts control resonant wave lifetimes.</p><h2>Sensitivity analysis for PIB resonances via Schur complement<a name="12"></a></h2><p>If we Schur complement away the variables associated to points outside Rin, we get two problems posed on [0,Rin] with induced boundary conditions at Rin. Then we'll do a sensitivity analysis for one of the resonances predicted by the particle-in-a-box model.</p><p>Set up schur complement objects to keep track of indices and the complementing process for us.</p><pre class="codeinput">I1 = 1:pib.Nrs(1);
+I2 = 1:pib.Nr; I2(I1) = []; pib_sc = schurComp(I1,I2);
+I2 = 1:dtn.Nr; I2(I1) = []; dtn_sc = schurComp(I1,I2);
+</pre><p>Pick a PIB-predicted resonance to focus on.</p><pre class="codeinput">n = 0;
+j = Nt/2 + n;
+pib_k = min(pib.ks{j}); <span class="comment">% smallest k eigenvalue of n = 0 mode</span>
+</pre><p>The n = 0 matrix-valued functions, evaluated at pib_k in each case.</p><pre class="codeinput">pib.T_fc(pib_k); <span class="comment">% evaluate PIB matrix-valued functions at pib_k</span>
+pibT = pib.T_fc_blks{j}; <span class="comment">% grab the one corresponding to n = 0</span>
+dtn.T_fc(pib_k); <span class="comment">% evaluate realistic model MVFs at pib_k</span>
+dtnT = dtn.T_fc_blks{j};
+</pre><p>Get the -B inv(D) C part of each one--only the bottom right entry of each one will be nonzero, and this entry is part of the induced boundary condition at Rin.</p><pre class="codeinput">pibT_update = pib_sc.update(pibT);
+dtnT_update = dtn_sc.update(dtnT);
+
+figure, spy(pibT_update)
+figure, spy(dtnT_update)
+</pre><img vspace="5" hspace="5" src="demo_quantum_corral_04.png" alt=""> <img vspace="5" hspace="5" src="demo_quantum_corral_05.png" alt=""> <p>For the curious, here are the nonzero entries of the PIB and realistic model updates due to the Schur complements. The difference between them reflects the difference between the boundary conditions we are imposing at Rin using the Schur complemented problems.</p><pre class="codeinput">tmp = pibT_update(end,end);
+fprintf(<span class="string">'Nonzero elt of n = 0 PIB MVF update: %f + %fi\n'</span>, real(tmp), imag(tmp));
+tmp = dtnT_update(end,end);
+fprintf(<span class="string">'Nonzero elt of n = 0 realistic MVF update: %f + %fi\n'</span>, real(tmp), imag(tmp));
+fprintf(<span class="string">'Difference between them: %4.2e\n'</span>, abs(pibT_update(end,end) - dtnT_update(end,end)) );
+</pre><pre class="codeoutput">Nonzero elt of n = 0 PIB MVF update: -20.425329 + 0.000000i
+Nonzero elt of n = 0 realistic MVF update: -20.473579 + 0.152282i
+Difference between them: 1.60e-01
+</pre><p>Take the Schur complements.</p><pre class="codeinput">pibT_sc = pib_sc.S(pibT);
+dtnT_sc = dtn_sc.S(dtnT);
+</pre><p>Now that we have problems of the same size and meaning, we can do a sensitivity analysis. Let k be a resonance predicted by the realistic model, where k = pib_k + dk. If pib_w, pib_v, pib_k is an eigentriple for the n = 0 PIB matrix-valued function, then dk = -pib_w'*E(k)*pib_v / (pib_w'*T'(k)*pib_v) to first order, where -  T is the Schur complement of the matrix-valued function whose eigenvalues give resonances predicted by the realistic model, and -  E is the difference between this and the Schur complement of the matrix-valued function whose eigenvalues give resonances predicted by the particle-in-a-box model. See dissertation.</p><p>Get pib_w and pib_v.</p><pre class="codeinput">[V,D,W] = eig(pibT_sc);
+d = diag(D);
+[~,idx] = min(abs(d));
+<span class="comment">% d(idx) is 0, signifying that pibT_sc*pib_v = 0, pib_w'*pibT_sc = 0.</span>
+fprintf(<span class="string">'Error in d(idx) being 0: %4.2e\n'</span>, abs(d(idx)) );
+pib_v = V(:,idx);
+pib_w = W(:,idx);
+</pre><pre class="codeoutput">Error in d(idx) being 0: 6.56e-11
+</pre><p>Compute T'(pib_k) by differentiating the Schur complement T(k) = A(k) - B(k)*inv(D(k))*C(k).</p><pre class="codeinput">B11 = dtn.B_fc_blks{j}(dtn_sc.I1,dtn_sc.I1);
+A12 = dtn.A_fc_blks{j}(dtn_sc.I1,dtn_sc.I2);
+A21 = dtn.A_fc_blks{j}(dtn_sc.I2,dtn_sc.I1);
+A22 = dtn.A_fc_blks{j}(dtn_sc.I2,dtn_sc.I2);
+B22 = dtn.B_fc_blks{j}(dtn_sc.I2,dtn_sc.I2);
+C22 = dtn.C_fc_blks{j}(dtn_sc.I2,dtn_sc.I2);
+dtn.dC_fc(pib_k);
+dC22 = dtn.dC_fc_blks{j}(dtn_sc.I2,dtn_sc.I2);
+M = A22 - pib_k^2*B22 + C22;
+dM = -2*pib_k*B22 + dC22;
+d_dtnT_sc = -2*pib_k*B11 + A12*(M\dM)*(M\A21); <span class="comment">% T'(pib_k)</span>
+</pre><p>Do the sensitivity analysis.</p><pre class="codeinput">E_sc = dtnT_sc - pibT_sc; <span class="comment">% E(pib_k)</span>
+dk = - (pib_w'*E_sc*pib_v) / (pib_w'*d_dtnT_sc*pib_v)
+</pre><pre class="codeoutput">
+dk =
+
+   2.8823e-04 - 9.1086e-04i
+
+</pre><p>This is pretty small, which suggests that a resonance predicted by the realistic model is nearby. Furthermore, the sensitivity analysis by which dk was produced is one step of a Newton iteration. Alternatively, we can use Newton iteration on a bordered system (see bordered_newton.m for a derivation).</p><pre class="codeinput">dtn_k = bordered_newton(pib_k, @(k) dtn.T_fc_j(k,j), @(k) dtn.dT_fc_j(k,j));
+fprintf(<span class="string">'Initial guess: %f + %fi\n'</span>, real(pib_k), imag(pib_k));
+fprintf(<span class="string">'Final iterate: %f + %fi\n'</span>, real(dtn_k), imag(dtn_k));
+fprintf(<span class="string">'Error between them: %4.2e\n'</span>, abs(pib_k - dtn_k));
+fprintf(<span class="string">'Final - initial: %f + %fi\n'</span>, real(dtn_k-pib_k), imag(dtn_k-pib_k));
+</pre><pre class="codeoutput">Initial guess: 2.404826 + 0.000000i
+Final iterate: 2.405120 + -0.000907i
+Error between them: 9.53e-04
+Final - initial: 0.000294 + -0.000907i
+</pre><p>Check that switching from pib_k to pib_k + dk, and then to dtn_k, improves the residual at each step.</p><pre class="codeinput">min(svd(dtn.T_fc_j(pib_k,j)))
+min(svd(dtn.T_fc_j(dtn_k,j)))
+min(svd(dtn.T_fc_j(pib_k + dk,j)))
+</pre><pre class="codeoutput">
+ans =
+
+   1.3385e-04
+
+
+ans =
+
+   6.9143e-13
+
+
+ans =
+
+   1.0053e-06
+
+</pre><h2>Comparison with rational approximation resonances via pseudospectral localization<a name="25"></a></h2><p>The particle-in-a-box resonances are pretty useless away from the origin. If we want to know the far-off resonances for the realistic model, we can replace the DtN map in the exact boundary condition with a rational approximation to the DtN map. We will pick a region where we want to find resonances and make a rational approximation that's good there.</p><p>Make rational approximation good on [0,2500]x[-50,50]. This will help us compute resonances for the realistic model that lie in this region. Note that now we're thinking about the resonance energies E, not the square roots k, so we're talking about k values close to [0,50]. Also note that we're going to put down an ellipse that covers this region, since the construction of rational approximations depends on an underlying region with smooth boundary.</p><pre class="codeinput">ell = ellipse(1250-0.5i,0,1249,50,200,80); <span class="comment">% should cover eigs we're looking at in k space</span>
+rat = ratApproxDtNBC_axisymm(dtn,ell,1); <span class="comment">% can do scattering and resonance computations with this</span>
+</pre><p>Recall that the axisymmetry assumption allowed us to rewrite the resonance problem as a sequence of nonlinear eigenvalue problems indexed by integer n. The matrix-valued function associated to the n-th NEP involves one component of the DtN map in Fourier space. This is what we replace with a rational approximation. Here's a picture of the error between the DtN map component and the rational approximation we have in rat, for the n = 0 NEP.</p><pre class="codeinput">n = 0;
+j = Nt/2 + n;
+rat.ratf(j).show_error(ell.bb);
+hold <span class="string">on</span>, ell.draw()
+title(<span class="string">''</span>) <span class="comment">% get rid of an automatically generated title</span>
+</pre><img vspace="5" hspace="5" src="demo_quantum_corral_06.png" alt=""> <p>For the curious, here is the error between the n = 0 matrix-valued functions (exact BC vs rational approximation) in the k variable.</p><pre class="codeinput">r.log10contour(@(k) norm(dtn.T_fc_j(k,j) - rat.T_fc_j(k,j)));
+t = linspace(0,1,1000);
+hold <span class="string">on</span>, plot(sqrt(ell.phi(t)),<span class="string">'k'</span>,<span class="string">'linewidth'</span>,3);
+</pre><img vspace="5" hspace="5" src="demo_quantum_corral_07.png" alt=""> <p>Find estimates for resonances of DtN problem near the real line using rational approximation problem.</p><pre class="codeinput">rat.eig_comp();
+</pre><p>Now let's filter out the eigenvalues we just computed that come from rational approximation (these are spurious and aren't resonance approximations). Let's also overlay with a pseudospectral plot for the matrix-valued function associated to the NEP for n = 0.</p><pre class="codeinput">maxres = 1e-2; <span class="comment">% maximum tolerated residual</span>
+figure
+<span class="keyword">for</span> n = 0:3
+    j = Nt/2 + n;
+    subplot(4,1,n+1), hold <span class="string">on</span>
+    r.log10contour(@(k) min(svd(dtn.T_fc_j(k,j))), 0, 0);
+    <span class="keyword">for</span> k = rat.ks{j}( r.contains(rat.ks{j}) ).'
+        <span class="keyword">if</span> isnan(k) || ~r.contains(k), <span class="keyword">continue</span>; <span class="keyword">end</span>
+        res = min(svd(dtn.T_fc_j(k,j)));
+        <span class="keyword">if</span> res &lt; maxres
+            plot(real(k), imag(k), <span class="string">'*b'</span>);
+        <span class="keyword">end</span>
+    <span class="keyword">end</span>
+    title([<span class="string">'n = '</span> num2str(n)]);
+<span class="keyword">end</span>
+</pre><img vspace="5" hspace="5" src="demo_quantum_corral_08.png" alt=""> <p>Compare the previous plot with the error between the MVFs from the exact DtN map boundary condition and its rational approximation.</p><pre class="codeinput">figure
+<span class="keyword">for</span> n = 0:3
+    j = Nt/2 + n;
+    subplot(4,1,n+1), hold <span class="string">on</span>
+    r.log10contour(@(k) norm(dtn.T_fc_j(k,j) - rat.T_fc_j(k,j)), 0, 0); <span class="comment">%, [-1,-1]);</span>
+    title([<span class="string">'n = '</span> num2str(n)]);
+<span class="keyword">end</span>
+</pre><img vspace="5" hspace="5" src="demo_quantum_corral_09.png" alt=""> <p>We get pseudospectral localization regions by finding a number such that the pseudospectral contours with that label fit inside the error contours with that same label. For instance, let's look at the components of the 10^{-1} pseudospectrum versus the region where error is less than 10^{-1}.</p><pre class="codeinput">r = rect(0,50,-1,1,500,20);
+figure
+<span class="keyword">for</span> n = 0:3
+    j = Nt/2 + n;
+    subplot(4,1,n+1), hold <span class="string">on</span>
+    r.log10contour(@(k) norm(dtn.T_fc_j(k,j) - rat.T_fc_j(k,j)), 0, 0, [-1,-1],<span class="string">'r'</span>);
+    r.log10contour(@(k) min(svd(dtn.T_fc_j(k,j))), 0, 0, [-1,-1],<span class="string">'g'</span>);
+    colorbar(<span class="string">'off'</span>);
+    <span class="keyword">for</span> k = rat.ks{j}( r.contains(rat.ks{j}) ).'
+        <span class="keyword">if</span> isnan(k) || ~r.contains(k), <span class="keyword">continue</span>; <span class="keyword">end</span>
+        res = min(svd(dtn.T_fc_j(k,j)));
+        <span class="keyword">if</span> res &lt; maxres
+            plot(real(k), imag(k), <span class="string">'*b'</span>);
+        <span class="keyword">end</span>
+    <span class="keyword">end</span>
+    title([<span class="string">'n = '</span> num2str(n)]);
+<span class="keyword">end</span>
+</pre><img vspace="5" hspace="5" src="demo_quantum_corral_10.png" alt=""> <p>The green components sitting completely inside the red contour contain the same number of resonances predicted by the model using an exact DtN map boundary condition as the predicted by the model using a rational approximation to the DtN map. The latter are plotted, so we know there is one resonance in each of said components.</p><p>If we look at the 10^{-1.2} contours instead, the localization regions are a little tighter.</p><pre class="codeinput">figure
+c = -1.2;
+<span class="keyword">for</span> n = 0:3
+    j = Nt/2 + n;
+
+    subplot(4,1,n+1), hold <span class="string">on</span>
+    r.log10contour(@(k) norm(dtn.T_fc_j(k,j) - rat.T_fc_j(k,j)), 0, 0, [c,c],<span class="string">'r'</span>);
+    r.log10contour(@(k) min(svd(dtn.T_fc_j(k,j))), 0, 0, [c,c],<span class="string">'g'</span>);
+    <span class="keyword">for</span> k = rat.ks{j}( r.contains(rat.ks{j}) ).'
+        <span class="keyword">if</span> isnan(k) || ~r.contains(k), <span class="keyword">continue</span>; <span class="keyword">end</span>
+        res = min(svd(dtn.T_fc_j(k,j)));
+        <span class="keyword">if</span> res &lt; maxres
+            plot(real(k), imag(k), <span class="string">'.b'</span>, <span class="string">'markersize'</span>, 8);
+        <span class="keyword">end</span>
+    <span class="keyword">end</span>
+    colorbar(<span class="string">'off'</span>);
+    title([<span class="string">'n = '</span> num2str(n)]);
+<span class="keyword">end</span>
+</pre><img vspace="5" hspace="5" src="demo_quantum_corral_11.png" alt=""> <h2>Look for resonances in a region far from the origin<a name="35"></a></h2><p>Although the resonances near the origin are the ones observed in real life experiments, maybe someone would want to know about resonances further away. This is quite easy to do in our rational approximation framework, as follows.</p><pre class="codeinput">r = rect(990,3010,-2000,0,200,200); <span class="comment">% look for resonances here</span>
+ell = ellipse(2000-1000i,0,1500,1500,200,80); <span class="comment">% rat approx using this ellipse accurate on r</span>
+rat = ratApproxDtNBC_axisymm(dtn,ell,1,150); <span class="comment">% 150 poles is enough and speeds things up</span>
+</pre><p>Compute resonance approximations.</p><pre class="codeinput">rat.eig_comp();
+</pre><p>Check that the error is indeed small on region of interest r, and also plot whatever n = 0 resonance approximations we found using the rational approximation that happen to lie in r.</p><pre class="codeinput">n = 0;
+j = Nt/2 + n;
+rat.ratf(j).show_error(ell.bb,1,1,[-12,-10,-8,-6,-4,-2,0,2]);
+hold <span class="string">on</span>, r.draw();
+hold <span class="string">on</span>, plot(rat.Es{j}(r.contains(rat.Es{j})),<span class="string">'.k'</span>,<span class="string">'markersize'</span>,20)
+title(<span class="string">''</span>);
+</pre><img vspace="5" hspace="5" src="demo_quantum_corral_12.png" alt=""> <p>Look at pseudospectrum components that act as localization regions. It turns out that the 10^{-1.8} contours work pretty well.</p><pre class="codeinput">c = -1.8;
+rat.ratf(j).show_error(ell.bb, 1, 0, [c c],<span class="string">'r'</span>);
+hold <span class="string">on</span>, plot(rat.Es{j}(r.contains(rat.Es{j})),<span class="string">'*k'</span>,<span class="string">'markersize'</span>,20)
+r.log10contour(@(E) min(svd(dtn.T_fc_j( rat.mysqrt(E),j ))), 0, 0, [c c],<span class="string">'g'</span>);
+title([]);
+</pre><img vspace="5" hspace="5" src="demo_quantum_corral_13.png" alt=""> <p>We conclude that each of the green contours contains exactly one resonance predicted by the model using exact boundary conditions.</p><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+function demo_quantum_corral
+% This demo compares the calculated resonances for a circular quantum 
+% corral coming from two different potentials used in elastic scattering 
+% models. 
+% A piecewise mesh in the radial direction is used to facilitate the
+% comparison. 
+% The use of pseudospectral localization and first order perturbation
+% theory are demonstrated in this example. See Ch. 5 of Localizing the
+% Eigenvalues of Matrix-valued Functions by A. Hood (my dissertation) for
+% discussion.
+% 
+% The user is recommended to read the "publish"-ed version in the html
+% folder rather than invoking this file directly.
+
+close all
+clear all
+addpath(pwd);
+addpath([pwd '/test']);
+
+%% Set-up for particle-in-a-box and more realistic potential
+% The quantum corral we have in mind consists of iron atoms placed in 
+% a circle on a copper metal surface. The resonances predicted by a 
+% particle-in-a-box model (no quantum tunneling) agree pretty well with
+% experiment. 
+% For comparison, we will use a very simple model that
+% assumes the potential due to the iron atoms is axisymmetric (as does the
+% particle-in-a-box model) but permits quantum tunneling. Again, see my
+% dissertation for details and references.
+
+R = 1; % radius of corral (to center of iron adatoms)
+
+%%
+% More realistic potential parameters - now quantum tunneling can happen.
+% The potential is a circular wall centered on the circle of radius R.
+w = 0.1; % width of axisymmetric wall
+V0 = 430; % height " " "
+Rin  = R - w/2; 
+Rout = R + w/2;
+% potential defined piecewise, so mesh must be defined piecewise, too
+dtn_Vs = {@(r,t) 0*r, @(r,t) 0*r + V0}; 
+coords = 'polar';
+
+%%
+% For compatibility, define the potential for the particle-in-a-box model
+% piecewise as well.
+pib_Vs = {@(r,t) 0*r, @(r,t) 0*r};
+
+%% 
+% The mesh for the particle-in-a-box model and the object instance we'll
+% use. The particle-in-a-box model essentially boils down to imposing
+% Dirichlet boundary conditions.
+% Note that we are using an object that explicitly uses the assumption
+% of axisymmetry.
+Nt = 40;
+pib_Nrs = [40,10];
+pib_Rs = [Rin,R];
+pib = dirBC_axisymm(Nt,pib_Nrs,pib_Vs,coords,pib_Rs); % PIB model has Dir BCs
+
+%%
+% As a sanity check, make sure the square roots of resonances we predict
+% (k = sqrt(E)) using pib are correct (they correspond to zeros of bessel 
+% functions).
+pib.eig_comp();
+
+figure
+for n = 0:3
+    j = Nt/2 + n;
+    subplot(2,2,n+1), hold all
+    plot(pib.ks{j},0*pib.ks{j}, '*');
+    ks = linspace(0,100,1000);
+    plot(ks,besselj(n,ks)/pib.Rs(end));
+    axis([0 50 -0.5 0.5])
+    title(['PIB eigs and zeros of bessel(n,:) for n = ' num2str(n)]);
+end
+
+%% 
+% The mesh for the more realistic model that permits quantum tunneling and
+% an object instance that imposes exact boundary conditions and uses
+% axisymmetry explicitly.
+dtn_Nrs = [pib_Nrs(1), 2*pib_Nrs(2)];
+dtn_Rs = [Rin,Rout];
+dtn = DtNBC_axisymm(Nt,dtn_Nrs,dtn_Vs,coords,dtn_Rs);
+
+%%
+% Picture of potential cross-sections and meshes as a sanity check.
+
+sf = 0.1; % parameter for shifting labels around
+figure, hold all
+plot(sf*[0,R,R,Rout + w/2], sf*[0,0,2*V0,2*V0]); % PIB potential (infinite circular box)
+plot(sf*[0,Rin,Rin,Rout,Rout,Rout+w/2],sf*[0,0,V0,V0,0,0]); % circular wall
+plot(sf*pib.r,sf*-100,'b.','markersize',10); % mesh for PIB
+plot(sf*dtn.r,sf*-200,'.','color',[0 0.4 0],'markersize',10); % mesh for other one
+% label 0, R1 = Rin, R, R2 = Rout
+set(gca, 'xtick', sf*[0, Rin, R, Rout]);
+set(gca, 'xticklabel', []);
+xoff = sf*0.01;
+xlabely = sf*(-2*V0/3 - 30);
+text(0      -xoff/2,xlabely,'$0$'  ,'interpreter','latex','verticalalignment','top','fontsize',14);
+text(sf*Rin -2*xoff,xlabely,'$R_1$','interpreter','latex','verticalalignment','top','fontsize',14);
+text(sf*R   -xoff,xlabely,'$R$'  ,'interpreter','latex','verticalalignment','top','fontsize',14);
+text(sf*Rout-xoff,xlabely,'$R_2$','interpreter','latex','verticalalignment','top','fontsize',14);
+% label 0, V0, and infinity
+set(gca, 'ytick', sf*[0, V0, 2*V0]);
+set(gca, 'yticklabel', []);
+ylabelx = -0.003;
+text(ylabelx, sf*0, '$0$', 'interpreter', 'latex','horizontalalignment','right','fontsize',14);
+text(ylabelx, sf*V0, '$V_0$', 'interpreter', 'latex','horizontalalignment','right','fontsize',14);
+text(ylabelx, sf*2*V0, '$\infty$', 'interpreter', 'latex','horizontalalignment','right','fontsize',14);
+
+axis(sf*[0, Rout+w, -2*V0/3, 2*V0 + 50])
+
+%% Visual comparison
+% The axisymmetry assumption allowed us to break down the resonance problem
+% into a sequence of nonlinear eigenvalue problems indexed by integers n.
+% Here are pseudospectral plots for the relevant matrix-valued functions
+% from the more realistic model for n = 0:3. These contour plots suggest
+% the locations of resonances predicted by the realistic model. The
+% resonances predicted by the particle-in-a-box model are plotted on top of
+% the pseudospectral plots. 
+
+% Compute the pseudospectral plot over this region with mesh parameters nx
+% = 500 and ny = 10.
+r = rect(1,50,-0.5,0.5,500,10);
+
+figure, hold on
+for n = 0:3
+    j = Nt/2 + n;
+    subplot(4,1,n+1), hold on
+    r.log10contour(@(k) min(svd(dtn.T_fc_j(k,j))),0);
+    plot(real(pib.ks{j}), imag(pib.ks{j}), '*');
+    r.focus();
+    title(['n = ' num2str(n)]);
+    box on
+end
+
+%%
+% We can see that the square roots k of resonances E predicted by the
+% particle-in-a-box model are decent approximations to the corresponding k
+% values predicted by the realistic model near the origin, but can't
+% capture the imaginary parts of the latter away from the origin. The
+% imaginary parts control resonant wave lifetimes.
+
+%% Sensitivity analysis for PIB resonances via Schur complement
+% If we Schur complement away the variables associated to points outside
+% Rin, we get two problems posed on [0,Rin] with induced boundary
+% conditions at Rin.
+% Then we'll do a sensitivity analysis for one of the resonances
+% predicted by the particle-in-a-box model.
+
+%% 
+% Set up schur complement objects to keep track of indices and the
+% complementing process for us.
+I1 = 1:pib.Nrs(1);
+I2 = 1:pib.Nr; I2(I1) = []; pib_sc = schurComp(I1,I2);
+I2 = 1:dtn.Nr; I2(I1) = []; dtn_sc = schurComp(I1,I2);
+
+%%
+% Pick a PIB-predicted resonance to focus on.
+n = 0;
+j = Nt/2 + n;
+pib_k = min(pib.ks{j}); % smallest k eigenvalue of n = 0 mode
+
+%%
+% The n = 0 matrix-valued functions, evaluated at pib_k in each case.
+pib.T_fc(pib_k); % evaluate PIB matrix-valued functions at pib_k
+pibT = pib.T_fc_blks{j}; % grab the one corresponding to n = 0
+dtn.T_fc(pib_k); % evaluate realistic model MVFs at pib_k
+dtnT = dtn.T_fc_blks{j};
+
+%%
+% Get the -B inv(D) C part of each oneREPLACE_WITH_DASH_DASHonly the bottom right entry of
+% each one will be nonzero, and this entry is part of the induced boundary
+% condition at Rin.
+pibT_update = pib_sc.update(pibT);
+dtnT_update = dtn_sc.update(dtnT);
+
+figure, spy(pibT_update)
+figure, spy(dtnT_update)
+
+%%
+% For the curious, here are the nonzero entries of the PIB and realistic 
+% model updates due to the Schur complements. The difference between 
+% them reflects the difference between the boundary conditions we are
+% imposing at Rin using the Schur complemented problems.
+tmp = pibT_update(end,end);
+fprintf('Nonzero elt of n = 0 PIB MVF update: %f + %fi\n', real(tmp), imag(tmp));
+tmp = dtnT_update(end,end);
+fprintf('Nonzero elt of n = 0 realistic MVF update: %f + %fi\n', real(tmp), imag(tmp));
+fprintf('Difference between them: %4.2e\n', abs(pibT_update(end,end) - dtnT_update(end,end)) );
+
+%%
+% Take the Schur complements.
+pibT_sc = pib_sc.S(pibT);
+dtnT_sc = dtn_sc.S(dtnT);
+
+%%
+% Now that we have problems of the same size and meaning, we can do a
+% sensitivity analysis. Let k be a resonance predicted by the realistic
+% model, where k = pib_k + dk. If pib_w, pib_v, pib_k is an eigentriple for
+% the n = 0 PIB matrix-valued function, then 
+% dk = -pib_w'*E(k)*pib_v / (pib_w'*T'(k)*pib_v) to first order,
+% where 
+% -  T is the Schur complement of the matrix-valued function whose 
+% eigenvalues give resonances predicted by the realistic model, and 
+% -  E is the difference between this and the Schur complement of the 
+% matrix-valued function whose eigenvalues give resonances predicted by 
+% the particle-in-a-box model. 
+% See dissertation.
+
+%%
+% Get pib_w and pib_v.
+[V,D,W] = eig(pibT_sc);
+d = diag(D);
+[~,idx] = min(abs(d));
+% d(idx) is 0, signifying that pibT_sc*pib_v = 0, pib_w'*pibT_sc = 0.
+fprintf('Error in d(idx) being 0: %4.2e\n', abs(d(idx)) );
+pib_v = V(:,idx);
+pib_w = W(:,idx);
+
+%%
+% Compute T'(pib_k) by differentiating the Schur complement
+% T(k) = A(k) - B(k)*inv(D(k))*C(k).
+B11 = dtn.B_fc_blks{j}(dtn_sc.I1,dtn_sc.I1);
+A12 = dtn.A_fc_blks{j}(dtn_sc.I1,dtn_sc.I2);
+A21 = dtn.A_fc_blks{j}(dtn_sc.I2,dtn_sc.I1);
+A22 = dtn.A_fc_blks{j}(dtn_sc.I2,dtn_sc.I2);
+B22 = dtn.B_fc_blks{j}(dtn_sc.I2,dtn_sc.I2);
+C22 = dtn.C_fc_blks{j}(dtn_sc.I2,dtn_sc.I2);
+dtn.dC_fc(pib_k);
+dC22 = dtn.dC_fc_blks{j}(dtn_sc.I2,dtn_sc.I2);
+M = A22 - pib_k^2*B22 + C22;
+dM = -2*pib_k*B22 + dC22;
+d_dtnT_sc = -2*pib_k*B11 + A12*(M\dM)*(M\A21); % T'(pib_k)
+
+%%
+% Do the sensitivity analysis.
+E_sc = dtnT_sc - pibT_sc; % E(pib_k)
+dk = - (pib_w'*E_sc*pib_v) / (pib_w'*d_dtnT_sc*pib_v)
+
+%%
+% This is pretty small, which suggests that a resonance predicted by the
+% realistic model is nearby. Furthermore, the sensitivity analysis by which
+% dk was produced is one step of a Newton iteration. Alternatively, we can
+% use Newton iteration on a bordered system (see bordered_newton.m for a
+% derivation).
+dtn_k = bordered_newton(pib_k, @(k) dtn.T_fc_j(k,j), @(k) dtn.dT_fc_j(k,j));
+fprintf('Initial guess: %f + %fi\n', real(pib_k), imag(pib_k));
+fprintf('Final iterate: %f + %fi\n', real(dtn_k), imag(dtn_k));
+fprintf('Error between them: %4.2e\n', abs(pib_k - dtn_k));
+fprintf('Final - initial: %f + %fi\n', real(dtn_k-pib_k), imag(dtn_k-pib_k));
+
+%%
+% Check that switching from pib_k to pib_k + dk, and then to dtn_k,
+% improves the residual at each step.
+min(svd(dtn.T_fc_j(pib_k,j)))
+min(svd(dtn.T_fc_j(dtn_k,j)))
+min(svd(dtn.T_fc_j(pib_k + dk,j)))
+
+%% Comparison with rational approximation resonances via pseudospectral localization
+% The particle-in-a-box resonances are pretty useless away from the origin.
+% If we want to know the far-off resonances for the realistic model, we can
+% replace the DtN map in the exact boundary condition with a rational 
+% approximation to the DtN map. We will pick a region where we want to find
+% resonances and make a rational approximation that's good there.
+
+%% 
+% Make rational approximation good on [0,2500]x[-50,50]. This will help us
+% compute resonances for the realistic model that lie in this region. Note
+% that now we're thinking about the resonance energies E, not the square
+% roots k, so we're talking about k values close to [0,50]. Also note that 
+% we're going to put down an ellipse that covers this region, since the 
+% construction of rational approximations depends on an underlying region 
+% with smooth boundary.
+ell = ellipse(1250-0.5i,0,1249,50,200,80); % should cover eigs we're looking at in k space
+rat = ratApproxDtNBC_axisymm(dtn,ell,1); % can do scattering and resonance computations with this
+
+%%
+% Recall that the axisymmetry assumption allowed us to rewrite the
+% resonance problem as a sequence of nonlinear eigenvalue problems indexed
+% by integer n. The matrix-valued function associated to the n-th NEP
+% involves one component of the DtN map in Fourier space. This is what we
+% replace with a rational approximation. Here's a picture of the error
+% between the DtN map component and the rational approximation we have in
+% rat, for the n = 0 NEP.
+n = 0;
+j = Nt/2 + n;
+rat.ratf(j).show_error(ell.bb);
+hold on, ell.draw()
+title('') % get rid of an automatically generated title
+
+%%
+% For the curious, here is the error between the n = 0 matrix-valued
+% functions (exact BC vs rational approximation) in the k variable.
+r.log10contour(@(k) norm(dtn.T_fc_j(k,j) - rat.T_fc_j(k,j)));
+t = linspace(0,1,1000);
+hold on, plot(sqrt(ell.phi(t)),'k','linewidth',3);
+
+%% 
+% Find estimates for resonances of DtN problem near the real line using 
+% rational approximation problem.
+rat.eig_comp();
+ 
+%%
+% Now let's filter out the eigenvalues we just computed that come from
+% rational approximation (these are spurious and aren't resonance
+% approximations). Let's also overlay with a pseudospectral plot for the
+% matrix-valued function associated to the NEP for n = 0.
+maxres = 1e-2; % maximum tolerated residual
+figure
+for n = 0:3
+    j = Nt/2 + n;
+    subplot(4,1,n+1), hold on
+    r.log10contour(@(k) min(svd(dtn.T_fc_j(k,j))), 0, 0);
+    for k = rat.ks{j}( r.contains(rat.ks{j}) ).'
+        if isnan(k) || ~r.contains(k), continue; end
+        res = min(svd(dtn.T_fc_j(k,j)));
+        if res < maxres
+            plot(real(k), imag(k), '*b');
+        end
+    end
+    title(['n = ' num2str(n)]);
+end
+
+%%
+% Compare the previous plot with the error between the MVFs from the exact
+% DtN map boundary condition and its rational approximation.
+figure
+for n = 0:3
+    j = Nt/2 + n;
+    subplot(4,1,n+1), hold on
+    r.log10contour(@(k) norm(dtn.T_fc_j(k,j) - rat.T_fc_j(k,j)), 0, 0); %, [-1,-1]);
+    title(['n = ' num2str(n)]);
+end
+
+%% 
+% We get pseudospectral localization regions by finding a number such that
+% the pseudospectral contours with that label fit inside the error contours
+% with that same label. For instance, let's look at the components of the
+% 10^{-1} pseudospectrum versus the region where error is less than
+% 10^{-1}.
+
+r = rect(0,50,-1,1,500,20);
+figure
+for n = 0:3
+    j = Nt/2 + n;
+    subplot(4,1,n+1), hold on
+    r.log10contour(@(k) norm(dtn.T_fc_j(k,j) - rat.T_fc_j(k,j)), 0, 0, [-1,-1],'r');
+    r.log10contour(@(k) min(svd(dtn.T_fc_j(k,j))), 0, 0, [-1,-1],'g');
+    colorbar('off');
+    for k = rat.ks{j}( r.contains(rat.ks{j}) ).'
+        if isnan(k) || ~r.contains(k), continue; end
+        res = min(svd(dtn.T_fc_j(k,j)));
+        if res < maxres
+            plot(real(k), imag(k), '*b');
+        end
+    end
+    title(['n = ' num2str(n)]);
+end
+
+%%
+% The green components sitting completely inside the red contour contain
+% the same number of resonances predicted by the model using an exact DtN
+% map boundary condition as the predicted by the model using a rational
+% approximation to the DtN map. The latter are plotted, so we know there is
+% one resonance in each of said components.
+
+%%
+% If we look at the 10^{-1.2} contours instead, the localization regions
+% are a little tighter.
+figure
+c = -1.2;
+for n = 0:3
+    j = Nt/2 + n;
+
+    subplot(4,1,n+1), hold on
+    r.log10contour(@(k) norm(dtn.T_fc_j(k,j) - rat.T_fc_j(k,j)), 0, 0, [c,c],'r');
+    r.log10contour(@(k) min(svd(dtn.T_fc_j(k,j))), 0, 0, [c,c],'g');
+    for k = rat.ks{j}( r.contains(rat.ks{j}) ).'
+        if isnan(k) || ~r.contains(k), continue; end
+        res = min(svd(dtn.T_fc_j(k,j)));
+        if res < maxres
+            plot(real(k), imag(k), '.b', 'markersize', 8);
+        end
+    end
+    colorbar('off');
+    title(['n = ' num2str(n)]);
+end
+
+%% Look for resonances in a region far from the origin
+% Although the resonances near the origin are the ones observed in real
+% life experiments, maybe someone would want to know about resonances
+% further away. This is quite easy to do in our rational approximation
+% framework, as follows.
+
+r = rect(990,3010,-2000,0,200,200); % look for resonances here
+ell = ellipse(2000-1000i,0,1500,1500,200,80); % rat approx using this ellipse accurate on r
+rat = ratApproxDtNBC_axisymm(dtn,ell,1,150); % 150 poles is enough and speeds things up
+
+%%
+% Compute resonance approximations.
+rat.eig_comp();
+
+%%
+% Check that the error is indeed small on region of interest r, and also 
+% plot whatever n = 0 resonance approximations we found using the rational 
+% approximation that happen to lie in r.
+n = 0; 
+j = Nt/2 + n;
+rat.ratf(j).show_error(ell.bb,1,1,[-12,-10,-8,-6,-4,-2,0,2]);
+hold on, r.draw();
+hold on, plot(rat.Es{j}(r.contains(rat.Es{j})),'.k','markersize',20)
+title('');
+
+%%
+% Look at pseudospectrum components that act as localization regions. It
+% turns out that the 10^{-1.8} contours work pretty well.
+c = -1.8;
+rat.ratf(j).show_error(ell.bb, 1, 0, [c c],'r');
+hold on, plot(rat.Es{j}(r.contains(rat.Es{j})),'*k','markersize',20)
+r.log10contour(@(E) min(svd(dtn.T_fc_j( rat.mysqrt(E),j ))), 0, 0, [c c],'g');
+title([]);
+
+%%
+% We conclude that each of the green contours contains exactly one
+% resonance predicted by the model using exact boundary conditions.
+
+
+##### SOURCE END #####
+--></body></html>

@@ -1,0 +1,155 @@
+\section{The Chebyshev basis}
+\label{sec-cheb_basis}
+
+Let $T_m(x)$ be the $m$-th first kind Chebyshev polynomial, defined by
+\begin{align*}
+ T_0(x) = 1, \qquad T_1(x) = x, \qquad T_m = 2xT_{m-1}(x) - T_{m-2}(x)
+ \quad\text{for }m \ge 2,
+\end{align*}
+and suppose
+$f(x) = \sum_{m=0}^\infty a_m T_m(x)$.
+Due to the fact that $T_m(\cos\theta) = \cos(m\theta)$, 
+\begin{align*}
+ f(\cos\theta) = \sum_{m=0}^\infty a_m \cos(m\theta) 
+               = \sum_{m=0}^\infty a_m \frac{1}{2}
+                 \left(e^{im\theta} + e^{-im\theta}\right)
+               = \sum_{m=-\infty}^\infty c_m e^{im\theta}
+\end{align*}
+where $c_0 = a_0$ and $c_m = a_m/2$ for $m \neq 0$. This shows
+that the coefficients in the Chebyshev polynomial expansion are
+basically Fourier coefficients, and we can therefore depend
+on the same convergence properties as long as we can write
+$x = \cos\theta$ for some $\theta$, i.e. as long as
+$x \in [-1,1]$.
+
+By truncating the series, we get a mapping from Chebyshev
+coefficients to approximate values at points
+$x_1,x_2,... \in [-1,1]$:
+\begin{align*}
+ \begin{bmatrix}
+  f(x_1) \\ f(x_2) \\ \vdots \\ 
+ \end{bmatrix}
+ = 
+ \underbrace{
+ \begin{bmatrix}
+  T_0(x_1) & T_1(x_1) & \hdots & \\
+  T_0(x_2) & T_1(x_2) & \hdots & \\ 
+   \vdots  & \vdots   & \ddots & 
+ \end{bmatrix}
+ }_{\text{this is what all but the first diagonal block of {\tt Winv\_*} looks like}}
+ \begin{bmatrix}
+  a_0 \\ a_1 \\ \vdots \\ 
+ \end{bmatrix}.
+\end{align*}
+If there are equal numbers of $x_j$'s and $a_m$'s, inverting the matrix maps
+values to Chebyshev coefficients. 
+However, the matrix can be nearly singular.
+
+\subsection{Using the FFT on values on full Chebyshev mesh}
+
+[Note: This is discussed in Trefethen's Spectral Methods in Matlab
+where the Chebyshev differentiation matrix is derived.]
+
+Simply put, we'll go from values on a Chebyshev mesh of $[-1,1]$
+to as many Chebyshev coefficients by way of the Fourier coefficients. 
+Suppose we have $N+1$ values. 
+The Chebyshev mesh ordered from left to right (since it's easier
+for me to keep track of) is $x_j = \cos\theta_j$,
+where $\theta_j = (-N+j-1)\frac{\pi}{N}$, $j = 1,2,...,N+1$.
+Now, let $j$ go up to $2N$ so that the $\theta_j$'s are equally
+spaced around the entire unit circle instead of just the lower half
+(note that $\theta_{2N+1} = \pi$, which is why we stop at
+$j = 2N$). Defining $v_j = f(x_j)$, $j = 1,2,...,N+1$, we get
+\begin{align*}
+ \begin{bmatrix}
+  v_1      \\ \vdots \\ v_{N+1} \\ v_N     \\ \vdots \\ v_2
+ \end{bmatrix}
+ = 
+ \begin{bmatrix}
+  V_1      \\ \vdots \\ V_{N+1} \\ V_{N+2} \\ \vdots \\ V_{2N}
+ \end{bmatrix}
+ = 
+ \begin{bmatrix}
+  e^{i(-N+1)\theta_1}     & \hdots & e^{i(-1)\theta_1}     & 1      & \hdots & e^{iN\theta_1} \\ 
+  \vdots                  &        & \vdots                & \vdots &        & \vdots \\ 
+  1                       & \hdots & 1                     & 1      & \hdots & 1 \\ 
+  e^{i(-N+1)\theta_{N+2}} & \hdots & e^{i(-1)\theta_{N+2}} & 1      & \hdots & e^{iN\theta_{N+2}} \\ 
+  \vdots                  &        & \vdots                & \vdots &        & \vdots \\ 
+  e^{i(-N+1)\theta_{2N}}  & \hdots & e^{i(-1)\theta_{2N}}  & 1      & \hdots & e^{iN\theta_{2N}}
+ \end{bmatrix}
+ \begin{bmatrix}
+  c_{-N+1} \\ \vdots \\ c_{-1}  \\ c_0     \\ \vdots \\ c_N
+ \end{bmatrix}
+\end{align*}
+Some diagonal scaling lets us rewrite this matrix multiplication using {\tt fft()} in 
+Matlab, which makes it easy to get between $V_j$'s and $c_m$'s. Note that even though
+$c_m = a_m/2$ for $m \neq 0$, the consequence of keeping $c_N$ but dropping $c_{-N}$
+is that we need to define $c_N = a_N$.
+
+\subsection{Half Chebyshev mesh}
+
+If we have only half of a Chebyshev mesh on $[-1,1]$, namely the part on $[0,1]$, then
+$x_j = \cos\theta_j$ where $\theta_j = (-N+j)\frac{\pi}{2N-1}$, $j = 1,...,N$ if
+there are $N$ points in the half Chebyshev mesh. Therefore if we have a function $f$
+with coefficients $a_m$ in its Chebyshev expansion, we can expect to get $N$ of them
+by inverting the matrix in
+\begin{align*}
+ \begin{bmatrix} 
+  f(x_1) \\ f(x_2) \\ \vdots \\ f(x_N)
+ \end{bmatrix}
+ = 
+ \begin{bmatrix}
+  T_0(x_1) & T_1(x_1) & \hdots & T_{N-1}(x_1) \\ 
+  T_0(x_2) & T_1(x_2) & \hdots & T_{N-1}(x_2) \\ 
+  \vdots   & \vdots   & \ddots & \vdots       \\ 
+  T_0(x_N) & T_1(x_N) & \hdots & T_{N-1}(x_N)
+ \end{bmatrix}
+ \begin{bmatrix}
+  a_0 \\ a_1 \\ \vdots \\ a_{N-1}
+ \end{bmatrix}.
+\end{align*}
+However, if $f(x)$ is a symmetric function, then $a_m = 0$ for odd $m$, and
+if $f(x)$ is an antisymmetric function the even $m$ terms are zero. 
+If Matlab's {\tt fft()} were to be used to find the $a_m$'s, the process could be
+to 1) extend the values on the half Chebyshev mesh to values on a full 
+Chebyshev mesh on $[-1,1]$ (so there would be $2N$ values, 2) get $2N$ Chebyshev
+coefficients $a_0, a_1, ... , a_{2N-1}$ by using the {\tt fft()} as above, and then 
+3) throw away all but $a_0, a_1, ..., a_{N-1}$. The last step clearly makes
+this process non-invertible, so it's silly. Much better is to save the nonzero coefficients
+in step 3, so this is what the code does. The corresponding matrix equation for symmetric
+$f$ is then
+\begin{align*}
+ \begin{bmatrix} 
+  f(x_1) \\ f(x_2) \\ \vdots \\ f(x_N)
+ \end{bmatrix}
+ = 
+ \underbrace{
+ \begin{bmatrix}
+  T_0(x_1) & T_2(x_1) & \hdots & T_{2N-2}(x_1) \\ 
+  T_0(x_2) & T_2(x_2) & \hdots & T_{2N-2}(x_2) \\ 
+  \vdots   & \vdots   & \ddots & \vdots        \\ 
+  T_0(x_N) & T_2(x_N) & \hdots & T_{2N-2}(x_N)
+ \end{bmatrix}
+ }_{\text{first diagonal block of }{\tt Winv\_even}}
+ \begin{bmatrix}
+  a_0 \\ a_2 \\ \vdots \\ a_{2N-2}
+ \end{bmatrix}
+\end{align*}
+and the matrix equation for antisymmetric $f$ is
+\begin{align*}
+ \begin{bmatrix} 
+  f(x_1) \\ f(x_2) \\ \vdots \\ f(x_N)
+ \end{bmatrix}
+ = 
+ \underbrace{
+ \begin{bmatrix}
+  T_1(x_1) & T_3(x_1) & \hdots & T_{2N-1}(x_1) \\ 
+  T_1(x_2) & T_3(x_2) & \hdots & T_{2N-1}(x_2) \\ 
+  \vdots   & \vdots   & \ddots & \vdots        \\ 
+  T_1(x_N) & T_3(x_N) & \hdots & T_{2N-1}(x_N)
+ \end{bmatrix}
+ }_{\text{first diagonal block of }{\tt Winv\_odd}}
+ \begin{bmatrix}
+  a_1 \\ a_3 \\ \vdots \\ a_{2N-1}
+ \end{bmatrix}.
+\end{align*}

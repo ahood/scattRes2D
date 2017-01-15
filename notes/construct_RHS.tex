@@ -1,0 +1,33 @@
+\section{Constructing the right-hand side for scattering}
+\label{sec-RHS}
+
+To verify this is all conceived of and implemented correctly,
+I want to check that scattered waves are indeed outgoing outside
+the potential. So, I need to know how to pose the scattering
+problem in the discretization.
+
+First of all, the scattering problem is
+$(-\Delta + V - k^2)\scatt = -V\inc$, $\scatt$
+outgoing. Since each block row of the matrices derived above
+corresponds to an equation for a given $\theta_m$, each block
+row of the discretized $-V\inc$ should be the evaluation
+on a ray corresponding to a $\theta_m$. That is,
+\[
+ \text{RHS} =
+ \begin{bmatrix}
+  -V\inc \text{ on mesh along ray }\theta = \theta_1 \\
+  \vdots \\
+  -V\inc \text{ on mesh along ray }\theta = \theta_{N_t}
+ \end{bmatrix}.
+\]
+In order for the boundary conditions to
+be enforced, some rows of RHS will be set to zero.
+
+An incident wave we've used before since it was convenient was
+\[
+ e^{ikx} = \sum_n i^n J_n(kr) e^{in\theta} \quad (x = r\cos\theta).
+\]
+The Jacobi-Anger expansion above can be derived 
+by getting the Fourier coefficients of $e^{ikx}$
+in integral form and then comparing to integral expressions for
+first-kind Bessel functions.

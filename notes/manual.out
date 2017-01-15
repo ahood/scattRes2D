@@ -1,0 +1,80 @@
+\BOOKMARK [1][-]{section.1}{Introduction}{}% 1
+\BOOKMARK [1][-]{section.2}{The mesh}{}% 2
+\BOOKMARK [1][-]{section.3}{The potential}{}% 3
+\BOOKMARK [0][-]{part.1}{I Scattering}{}% 4
+\BOOKMARK [1][-]{section.4}{Solving the scattering problem}{part.1}% 5
+\BOOKMARK [1][-]{section.5}{Using scattResComp2d}{part.1}% 6
+\BOOKMARK [2][-]{subsection.5.1}{Easy indexing}{section.5}% 7
+\BOOKMARK [2][-]{subsection.5.2}{Easy mesh representations}{section.5}% 8
+\BOOKMARK [2][-]{subsection.5.3}{Fourier representations and converting}{section.5}% 9
+\BOOKMARK [2][-]{subsection.5.4}{Chebyshev representations and converting}{section.5}% 10
+\BOOKMARK [2][-]{subsection.5.5}{Creating discretized scattering problem}{section.5}% 11
+\BOOKMARK [2][-]{subsection.5.6}{Bessel functions and resonance processing}{section.5}% 12
+\BOOKMARK [2][-]{subsection.5.7}{Not important right now}{section.5}% 13
+\BOOKMARK [1][-]{section.6}{Solving the scattering problem with dirBC}{part.1}% 14
+\BOOKMARK [2][-]{subsection.6.1}{The boundary condition}{section.6}% 15
+\BOOKMARK [2][-]{subsection.6.2}{Creating an instance}{section.6}% 16
+\BOOKMARK [2][-]{subsection.6.3}{Properties and methods}{section.6}% 17
+\BOOKMARK [2][-]{subsection.6.4}{Solving the scattering problem}{section.6}% 18
+\BOOKMARK [1][-]{section.7}{Solving the scattering problem with pmlBC}{part.1}% 19
+\BOOKMARK [2][-]{subsection.7.1}{The PML and the boundary condition}{section.7}% 20
+\BOOKMARK [2][-]{subsection.7.2}{Creating an instance}{section.7}% 21
+\BOOKMARK [2][-]{subsection.7.3}{Properties and methods}{section.7}% 22
+\BOOKMARK [2][-]{subsection.7.4}{Solving the scattering problem}{section.7}% 23
+\BOOKMARK [1][-]{section.8}{Solving the scattering problem with DtNBC}{part.1}% 24
+\BOOKMARK [2][-]{subsection.8.1}{The boundary condition}{section.8}% 25
+\BOOKMARK [2][-]{subsection.8.2}{Creating an instance}{section.8}% 26
+\BOOKMARK [2][-]{subsection.8.3}{Properties and methods}{section.8}% 27
+\BOOKMARK [2][-]{subsection.8.4}{Solving the scattering problem}{section.8}% 28
+\BOOKMARK [1][-]{section.9}{The sparse versions}{part.1}% 29
+\BOOKMARK [2][-]{subsection.9.1}{scattResComp2d\137sparse}{section.9}% 30
+\BOOKMARK [2][-]{subsection.9.2}{dirBC\137sparse}{section.9}% 31
+\BOOKMARK [2][-]{subsection.9.3}{pmlBC\137sparse}{section.9}% 32
+\BOOKMARK [2][-]{subsection.9.4}{DtNBC\137sparse}{section.9}% 33
+\BOOKMARK [0][-]{part.2}{II Resonances}{}% 34
+\BOOKMARK [1][-]{section.10}{Resonances}{part.2}% 35
+\BOOKMARK [1][-]{section.11}{The ellipse and rect shape objects}{part.2}% 36
+\BOOKMARK [2][-]{subsection.11.1}{Creating an instance of rect}{section.11}% 37
+\BOOKMARK [2][-]{subsection.11.2}{rect properties and methods}{section.11}% 38
+\BOOKMARK [2][-]{subsection.11.3}{Creating an instance of ellipse}{section.11}% 39
+\BOOKMARK [2][-]{subsection.11.4}{ellipse properties and methods}{section.11}% 40
+\BOOKMARK [1][-]{section.12}{ratApprox and ratApproxWithPoles}{part.2}% 41
+\BOOKMARK [2][-]{subsection.12.1}{Creating a ratApprox instance}{section.12}% 42
+\BOOKMARK [2][-]{subsection.12.2}{ratApprox properties and methods}{section.12}% 43
+\BOOKMARK [2][-]{subsection.12.3}{Child object ratApproxWithPoles}{section.12}% 44
+\BOOKMARK [1][-]{section.13}{ratApproxDtNBC}{part.2}% 45
+\BOOKMARK [2][-]{subsection.13.1}{Creating a ratApproxDtNBC instance}{section.13}% 46
+\BOOKMARK [2][-]{subsection.13.2}{Properties and methods}{section.13}% 47
+\BOOKMARK [2][-]{subsection.13.3}{Computing resonances}{section.13}% 48
+\BOOKMARK [1][-]{section.14}{ratApproxDtNBC\137sparse}{part.2}% 49
+\BOOKMARK [2][-]{subsection.14.1}{Creating an instance}{section.14}% 50
+\BOOKMARK [2][-]{subsection.14.2}{Properties and methods}{section.14}% 51
+\BOOKMARK [2][-]{subsection.14.3}{Computing resonances}{section.14}% 52
+\BOOKMARK [0][-]{part.3}{III Derivations}{}% 53
+\BOOKMARK [1][-]{section.15}{``Half'' Chebyshev radial grid on B\(0,1\) and derivative matrices}{part.3}% 54
+\BOOKMARK [1][-]{section.16}{Piecewise discretizations in r direction}{part.3}% 55
+\BOOKMARK [1][-]{section.17}{Discretized Laplacian}{part.3}% 56
+\BOOKMARK [1][-]{section.18}{Constructing the right-hand side for scattering}{part.3}% 57
+\BOOKMARK [1][-]{section.19}{Discretizing with a PML}{part.3}% 58
+\BOOKMARK [1][-]{section.20}{The DtN map and its derivatives}{part.3}% 59
+\BOOKMARK [1][-]{section.21}{Constructing C\(DtN\)\(k\)}{part.3}% 60
+\BOOKMARK [2][-]{subsection.21.1}{Fourier coefficients to values with U}{section.21}% 61
+\BOOKMARK [2][-]{subsection.21.2}{Applying U with the inverse DFT}{section.21}% 62
+\BOOKMARK [2][-]{subsection.21.3}{The DtN map in Fourier space}{section.21}% 63
+\BOOKMARK [2][-]{subsection.21.4}{The DtN map boundary condition and C\(DtN\)\(k\)}{section.21}% 64
+\BOOKMARK [1][-]{section.22}{Rational approximations}{part.3}% 65
+\BOOKMARK [2][-]{subsection.22.1}{Rational approx from quadrature \(analytic function\)}{section.22}% 66
+\BOOKMARK [2][-]{subsection.22.2}{Rational approx from quadrature \(meromorphic function\)}{section.22}% 67
+\BOOKMARK [2][-]{subsection.22.3}{Linearizing a rational approximation}{section.22}% 68
+\BOOKMARK [2][-]{subsection.22.4}{Creating A\(rat\) and B\(rat\)}{section.22}% 69
+\BOOKMARK [1][-]{section.23}{Zeros of Hankel functions}{part.3}% 70
+\BOOKMARK [2][-]{subsection.23.1}{Zeros from McMahon expansion}{section.23}% 71
+\BOOKMARK [2][-]{subsection.23.2}{Zeros from Olver expansion}{section.23}% 72
+\BOOKMARK [1][-]{section.24}{Preconditioners}{part.3}% 73
+\BOOKMARK [2][-]{subsection.24.1}{Action of T\(DtN\)\(k\) in Fourier space}{section.24}% 74
+\BOOKMARK [2][-]{subsection.24.2}{Fourier preconditioner for T\(DtN\)\(k\)}{section.24}% 75
+\BOOKMARK [2][-]{subsection.24.3}{Fourier preconditioner for T\(rat\)\(k\) and T\(rat\)full\(k\)}{section.24}% 76
+\BOOKMARK [1][-]{section.25}{True solution for axisymmetric case}{part.3}% 77
+\BOOKMARK [1][-]{section.26}{The Chebyshev basis}{part.3}% 78
+\BOOKMARK [2][-]{subsection.26.1}{Using the FFT on values on full Chebyshev mesh}{section.26}% 79
+\BOOKMARK [2][-]{subsection.26.2}{Half Chebyshev mesh}{section.26}% 80

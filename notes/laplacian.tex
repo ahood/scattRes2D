@@ -1,0 +1,194 @@
+\section{Discretized Laplacian}
+\label{sec-laplacian}
+
+We want to discover (complex) frequencies which are
+poles of the Schr\"odinger operator, i.e. resonances.
+The time-independent Schr\"odinger equation is
+$(-\Delta + V - k^2)\psi = 0$, where $V$ is a potential
+function which we'll assume to be piecewise smooth (for
+the sake of making our discretization scheme manageable)
+and we write the resonance energy $E$ as $k^2$ 
+for notational convenience. If $\psi$
+is outgoing, then $k^2$ is a resonance energy. In this section,
+boundary conditions will be ignored.
+
+We want to enforce that our proposed solution $\psi$ satisfies
+$(-\Delta +V - k^2)\psi = 0$ at an $r,\theta$ mesh of a disc.
+We'll use an equally spaced mesh of $2N$ points
+in the $\theta$ direction (the requirement for evenness
+emerges in Section~\ref{sec-halfcheb}).
+Those $\theta$ grid points will be $0, \Delta\theta, 2\Delta\theta, ...
+, (2N-1)\Delta\theta$ where $\Delta\theta = 2\pi/(2N)$. 
+The $r$ direction will be meshed as described in
+Section~\ref{sec-piecewise}. Let the vector $\hat{r}$ be the
+vector of the $n$ mesh points.
+
+Now, in polar coordinates $\Delta = \frac{\partial^2}{\partial r^2}                         
++ \frac{1}{r} \frac{\partial}{\partial r} + \frac{1}{r^2}                    
+\frac{\partial^2}{\partial \theta^2}$. 
+The radial derivatives part of the Laplacian has already been
+discretized in Section~\ref{sec-piecewise}.
+So, we only need to worry about discretizing the $\theta$ derivative
+term. 
+
+
+Suppose we have a matrix $D_{\theta\theta}$ which acts as
+\begin{align*}
+ D_{\theta\theta}\psi(r,\hat{\theta})
+  = \psi_{\theta\theta}(r,\hat{\theta}).
+\end{align*}
+Then,
+\begin{align*}
+ \underbrace{
+ \begin{bmatrix}
+  D_{\theta\theta} &        & \\
+                   & \ddots & \\
+                   &        & D_{\theta\theta}
+ \end{bmatrix}
+ }_{I \otimes D_{\theta\theta}}
+ \begin{bmatrix}
+  \psi(r_1,\hat{\theta}) \\ \vdots \\ \psi(r_n,\hat{\theta})
+ \end{bmatrix}
+ =
+ \begin{bmatrix}
+  \psi_{\theta\theta}(r_1,\hat{\theta}) \\
+  \vdots \\
+  \psi_{\theta\theta}(r_n,\hat{\theta})
+ \end{bmatrix}
+\end{align*}
+
+There is a permutation matrix $P$ such that
+\begin{align*}
+ P
+ \begin{bmatrix}
+  \psi(\hat{r},\theta_1)\\ \vdots \\ \psi(\hat{r},\theta_N)
+ \end{bmatrix}
+ =
+ \begin{bmatrix}
+  \psi(r_1,\hat{\theta}) \\
+  \vdots \\
+  \psi(r_n,\hat{\theta})
+ \end{bmatrix}
+\end{align*}
+and hence
+\begin{align*}
+ P^T (I \otimes D_{\theta\theta}) P
+ \begin{bmatrix}
+  \psi(\hat{r},\theta_1) \\ \vdots \\ \psi(\hat{r},\theta_N)
+ \end{bmatrix}
+ =
+ \begin{bmatrix}
+  \psi_{\theta\theta}(\hat{r},\theta_1) \\
+  \vdots \\
+  \psi_{\theta\theta}(\hat{r},\theta_N)
+ \end{bmatrix}
+\end{align*}
+
+It turns out that $P^T (I \otimes D_{\theta\theta}) P
+ = D_{\theta\theta} \otimes I$, shown as follows.
+
+\begin{align*}
+ \left(\Dtt \otimes I\right)
+ \begin{bmatrix} 
+  \psi(\hat{r},\theta_1) \\ 
+  \vdots \\ 
+  \psi(\hat{r},\theta_N)
+ \end{bmatrix}
+ &= \vec\left(
+     I
+     \begin{bmatrix}
+      \psi(\hat{r},\theta_1) \hdots \psi(\hat{r},\theta_N)
+     \end{bmatrix}
+     \Dtt^T \right) \\ 
+ &= \vec\left(
+     \begin{bmatrix}
+      \psi(r_1,\hat{\theta})
+      \hdots
+      \psi(r_n,\hat{\theta})
+     \end{bmatrix}^T \Dtt^T \right) \\ 
+ &= \vec\left(\left(
+     \Dtt
+     \begin{bmatrix}
+      \psi(r_1,\hat{\theta})
+      \hdots
+      \psi(r_n,\hat{\theta})
+     \end{bmatrix}
+    \right)^T \right) \\ 
+ &= \vec\left(
+     \begin{bmatrix}
+      \psi_{\theta\theta}(r_1,\hat{\theta})
+      \hdots
+      \psi_{\theta\theta}(r_n,\hat{\theta})
+     \end{bmatrix}^T \right) \\ 
+ &= \vec\left(
+     \begin{bmatrix}
+      \psi_{\theta\theta}(\hat{r},\theta_1)
+      \hdots
+      \psi_{\theta\theta}(\hat{r},\theta_N)
+     \end{bmatrix} \right) \\ 
+ &= \begin{bmatrix}
+     \psi_{\theta\theta}(\hat{r},\theta_1) \\ 
+     \vdots \\ 
+     \psi_{\theta\theta}(\hat{r},\theta_N)
+    \end{bmatrix}
+\end{align*}
+
+For $R$ the diagonal matrix of the reciprocals of
+the mesh values ({\tt 1./}$\hat{r}$ in semi-Matlab notation), 
+\begin{align*}
+ \begin{bmatrix}
+  \Delta\psi(\hat{r},\theta_1) \\ \vdots \\
+  \Delta\psi(\hat{r},\theta_N)
+ \end{bmatrix}
+ &=
+ \begin{bmatrix}
+  \psi_{rr}(\hat{r},\theta_1) +
+  R\psi_r(\hat{r},\theta_1) +
+  R^2\psi_{\theta\theta}(\hat{r},\theta_1) \\ \vdots \\
+  \psi_{rr}(\hat{r},\theta_N) +
+  R\psi_r(\hat{r},\theta_N) +
+  R^2\psi_{\theta\theta}(\hat{r},\theta_N)
+ \end{bmatrix} \\
+ &=
+ \left( {\tt Drr} + (I \otimes R) {\tt Dr}
+                  + (I \otimes R^2) (\Dtt \otimes I)
+ \right)
+ \begin{bmatrix}
+  \psi(\hat{r},\theta_1) \\ 
+  \vdots \\ 
+  \psi(\hat{r},\theta_N)
+ \end{bmatrix}
+\end{align*}
+where
+\begin{align*}
+ {\tt Drr} &= I_{2N} \otimes {\tt Drr\_I} + 
+              \begin{bmatrix}0 & I_N \\ I_N & 0\end{bmatrix}
+              \otimes {\tt Drr\_J} \\ 
+ {\tt Dr}  &= I_{2N} \otimes {\tt Dr\_I} + 
+              \begin{bmatrix}0 & I_N \\ I_N & 0\end{bmatrix}
+              \otimes {\tt Dr\_J},
+\end{align*}
+for {\tt Drr\_I}, {\tt Drr\_J}, {\tt Dr\_I} and {\tt Dr\_J}
+as defined in Section~\ref{sec-piecewise}.
+
+Due to the property that $(A \otimes B)(C \otimes D) = 
+AC \otimes BD$, our discrete Laplace operator is
+therefore
+\begin{align*}
+ \hat{\Delta} = {\tt Drr} + (I \otimes R){\tt Dr} + \Dtt \otimes R^2.
+\end{align*}
+
+Finally, enforcing $(-\Delta + V - k^2)\psi = 0$ at all mesh points
+gives us
+\begin{align*}
+ \left(
+  -\hat{\Delta} 
+  +\operatorname{diag}(V(\hat{r},\theta_1),...,V(\hat{r},\theta_N))
+  -k^2 I 
+ \right)
+ \begin{bmatrix}
+  \psi(\hat{r},\theta_1) \\ \vdots \\ \psi(\hat{r},\theta_N)
+ \end{bmatrix} = 0,
+\end{align*}
+where the zero on the right-hand side is interpreted to be the values
+of the zero function on our mesh.

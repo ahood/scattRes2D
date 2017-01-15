@@ -1,0 +1,275 @@
+\section{Rational approximations}
+\label{sec-rat_approx}
+
+In the end, the goal is to find the resonance energies,
+approximated as eigenvalues of $\dtnT(\pm\sqrt{E})$
+(approximated because we had to pass from the continuous
+definition~(\ref{eqtn-resprob}) to a discretization).
+Unfortunately, we don't know how to rewrite
+$\dtnT(\pm\sqrt{E})$ as
+a standard, generalized, polynomial, or rational
+eigenvalue problem. Since $\dtnT(\pm\sqrt{E})
+= \dtnA - E \dtnB + \dtnC(\pm\sqrt{E})$, the
+trouble is with the nonlinear part $\dtnC(\pm\sqrt{E})$.
+So, the best thing we know how to do is
+find a rational approximation to $\dtnC(\pm\sqrt{E})$,
+meaning a nice matrix-valued function 
+$\ratT_{\text{full}}(\pm\sqrt{E}) := \ratA - E\ratB$ 
+whose Schur complement
+$\ratT(\pm\sqrt{E}) := \dtnA - E\dtnB + \ratC(\pm\sqrt{E})$
+satisfies $\ratC(\pm\sqrt{E}) \approx \dtnC(\pm\sqrt{E})$
+for energies $E$ in a user-specified region of the complex plane
+(an ellipse, for simplicity).
+In the following sections, the matrices $\ratA$ and
+$\ratB$ will be derived.
+
+\subsection{Rational approx from quadrature (analytic function)}
+
+First of all, suppose an ellipse has been chosen and let
+$\Gamma$ be its boundary. (Any region with smooth
+boundary would work, but we'll stick with an ellipse for
+simplicity.) Let $f$ be a function analytic on and inside $\Gamma$.
+
+Then for any $z_0$ in the interior of $\Gamma$, and for 
+$f$ analytic in the interior of $\Gamma$, the Cauchy
+integral formula is
+\[
+ f(z_\ast) = \frac{1}{2\pi i}\int_\Gamma
+             \frac{f(z)}{z-z_\ast}\,dz.
+\]
+For $\varphi : [0,1] \rightarrow \Gamma$,
+\begin{align*}
+ 2\pi i f(z_\ast)
+ = \int_0^1 \frac{f(\varphi(t))}{\varphi(t)-z_\ast}
+   \,\varphi'(t)\,dt
+\end{align*}
+Given a mesh $\lbrace 0 = t_0,t_1,...,t_N=1 \rbrace$
+of $[0,1]$, the trapezoid rule gives
+\begin{align*}
+ \int_0^1 g(t)\,dt 
+ &= \sum_{j=1}^N \int_{t_{j-1}}^{t_j}
+    g(t)\,dt 
+    \qquad & \left( g = \frac{f\circ\varphi}
+                             {\varphi - z_\ast}\,\varphi' \right) \\ 
+ &\approx \sum_{j=1}^N 
+    \left[g(t_{j-1}) + g(t_j)\right]
+    \frac{h_j}{2} 
+    \qquad & \left( h_j = t_j - t_{j-1} \right) \\ 
+ &= g(t_0)\,\frac{h_1}{2} + 
+    \sum_{j=1}^{N-1}
+    g(t_j)\,\frac{h_j + h_{j+1}}{2} + 
+    g(t_N)\,\frac{h_N}{2}.
+\end{align*}
+Letting $z_j = \varphi(t_j)$ and 
+\begin{align*}
+ w_j &= f(z_j)\,\varphi'(t_j)\,\frac{t_{j+1}-t_{j-1}}{4\pi i},
+ \quad j = 1,...,N-1, \\ 
+ w_0 &= f(z_0)\,\varphi'(t_0)\,\frac{t_1 - t_0}{4\pi i},
+ \quad
+ w_N = f(z_N)\,\varphi'(t_N)\,\frac{t_N - t_{N-1}}{4\pi i},
+\end{align*}
+we get
+\[
+ f(z_\ast) \approx \sum_{j=0}^N \frac{w_j}{z_j - z_\ast}.
+\]
+Let $z$ and $w$ be column vectors of the nodes and weights, resp.
+
+\subsection{Rational approx from quadrature (meromorphic function)}
+
+If $f$ has poles, then we can get a rational approximation by
+punching holes out of the domain. For example, if 
+$f(z) = g(z)/(z-p)$ in the interior of $\Gamma$, and if
+$\Gamma_p$ is a little circle around $p$, then for any point
+$z_\ast$ in the interior of $\Gamma$ but exterior of $\Gamma_p$,
+\[
+ 2\pi i f(z_\ast) = \left( \int_\Gamma - \int_{\Gamma_p} \right)
+         \frac{f(z)}{z-z_\ast}\,dz.
+\]
+Using the same procedure as in the last section to 
+get a quadrature rule for the (clockwise) integral around
+$\Gamma_p$, put $z^{(p)},w^{(p)}$ as vectors
+of the respective
+nodes and weights. Then,
+\[
+ f(z_\ast) \approx 
+   \sum_{j=0}^N \frac{w_j}{z_j-z_\ast} + 
+   \sum_{j=0}^{N^{(p)}} \frac{w_j^{(p)}}{z_j^{(p)}-z_\ast}.
+\]
+
+It's clear that if we append each of $z^{(p)},w^{(p)}$
+to the ends of their counterparts $z,w$, then we end up with
+a quadrature rule that looks just like the one for analytic 
+functions. Let $\hat{z}$ and $\hat{w}$ be the nodes and weights
+for the rational approximation to the meromorphic function $f$.
+
+\subsection{Linearizing a rational approximation}
+
+Suppose we have vectors $\hat{z}$ and $\hat{w}$ of
+nodes and poles, defined as above. Then,
+the Schur complement of
+\[
+ \left[
+ \begin{array}{c | c}
+  0 & \hat{w}^T \\ \hline
+  -{\bf 1} & \operatorname{diag}(\hat{z}) - z_\ast I
+ \end{array}
+ \right]
+\]
+onto the leading 1,1 block is
+\[
+ 0 - \hat{w}^T \left(\diag(\hat{z}) - z_\ast I\right)^{-1}
+     (-{\bf 1})
+ = 
+ \sum_j \frac{\hat{w}_j}{\hat{z}_j - z_\ast},
+\]
+which is the rational approximation to $f$ at $z_\ast$
+previously derived.
+
+\subsection{Creating $\ratA$ and $\ratB$}
+
+Let $\zn{n}$, $\wn{n}$ be the nodes and
+weights for a rational approximation to $f_n(\pm\sqrt{E},R)$,
+according to the user's choice
+of branch, and $k = \pm\sqrt{E}$ accordingly. 
+Then the Schur complement 
+$-W\left(\diag(Z) - E I\right)^{-1} P$ of
+\begin{align*}
+ \left[
+ \begin{array}{c|c}
+    & W \\ \hline
+  P & \diag(Z) - E I
+ \end{array}
+ \right]
+\end{align*}
+onto the leading block
+is a rational approximation to
+\begin{align*}
+ \left[
+ \begin{array}{cccc|c|cccc}
+  0 &        &   &               &        &   &        &   & \\
+    & \ddots &   &               &        &   &        &   & \\
+    &        & 0 &               &        &   &        &   & \\
+    &        &   & f_{-N+1}(k,R) &        &   &        &   & \\ \hline
+    &        &   &               & \ddots &   &        &   & \\ \hline
+    &        &   &               &        & 0 &        &   & \\
+    &        &   &               &        &   & \ddots &   & \\ 
+    &        &   &               &        &   &        & 0 & \\ 
+    &        &   &               &        &   &        &   & f_N(k,R)
+ \end{array}
+ \right]
+ \qquad
+ % ouch, using n in two different ways
+ (\diag\left(d(k,R)\right) \otimes e_ne_n^T \text{ from Section~\ref{sec-dtnC}})
+\end{align*}
+where
+\begin{align*}
+ W =
+ \left[
+ \begin{array}{c|c}
+  0          & \\
+  \vdots     & \\ 
+  0          & \\ 
+  (\wn{0})^T & \\ \hline
+             & 0 \\
+             & \vdots \\ 
+             & 0 \\ 
+             & (\wn{1})^T, 
+ \end{array}
+ \right], 
+ \qquad
+ Z = 
+ \begin{bmatrix}
+  \zn{0} \\ \zn{1}
+ \end{bmatrix}, \qquad\text{and}\qquad
+ P = 
+ \left[
+ \begin{array}{cccc|cccc}
+  0       & \hdots & 0      & -1     &        &        &        \\
+  \vdots  &        & \vdots & \vdots &        &        &        \\
+  0       & \hdots & 0      & -1     &        &        &        \\ \hline
+          &        &        &        & 0      & \hdots & -1     \\ 
+          &        &        &        & \vdots &        & \vdots \\ 
+          &        &        &        & 0      & \hdots & -1
+ \end{array}
+ \right]
+\end{align*}
+for the case $N = 1$.
+
+Therefore
+\begin{align*}
+ (U \otimes I)
+ \left(\diag\left(d(k,R)\right) \otimes e_ne_n^T\right)
+ (U^{-1} \otimes I)
+ \approx
+ (U \otimes I)
+ \left(-W\left(\diag(Z) - E I\right)^{-1}P\right)
+ (U^{-1} \otimes I).
+\end{align*}
+Since $\dtnC(k) = -(U\otimes I)
+\left(\diag\left(d(k,R)\right) \otimes e_ne_n^T\right)
+(U^{-1}\otimes I)$, this means the Schur complement of
+\begin{align*}
+ \left[
+ \begin{array}{c|c}
+                       & (U \otimes I)W \\ \hline
+  -P(U^{-1} \otimes I) & \diag(Z) - E I
+ \end{array}
+ \right]
+\end{align*}
+is a good approximation to $\dtnC(k)$ for $k^2 = E$
+in the user-specified ellipse. Therefore the Schur
+complement of
+\begin{align*}
+ \left[
+ \begin{array}{c|c}
+  \dtnA - E\dtnB       & (U \otimes I)W \\ \hline
+  -P(U^{-1} \otimes I) & \diag(Z) - EI
+ \end{array}
+ \right]
+\end{align*}
+is 
+\begin{align*}
+ \ratT(k) := 
+ \dtnA - E \dtnB + 
+ \underbrace{
+ (U \otimes I)
+ W\left(\diag(Z) - EI\right)^{-1} P
+ (U^{-1} \otimes I)
+ }_{\ratC(k)}
+\end{align*}
+where $\ratC(k) \approx \dtnC(k)$.
+So we define
+\begin{align*}
+ \ratA
+ = 
+ \left[
+ \begin{array}{c|c}
+  \dtnA                & (U \otimes I)W \\ \hline
+  -P(U^{-1} \otimes I) & \diag(Z) 
+ \end{array}
+ \right],
+ \qquad
+ \ratB
+ = 
+ \left[
+ \begin{array}{c|c}
+  \dtnB &  \\ \hline
+        & I
+ \end{array}
+ \right].
+\end{align*}
+
+The relationship between these variables and the ones used in
+Section~\ref{sec-preconditioners} and the code are summarized in the
+following table:
+\begin{center}
+\begin{tabular}{c c c}
+ here    & Section~\ref{sec-preconditioners} & code \\ \hline \\ 
+  $W$                    & $\tilde{A}_{12}$ & {\tt fourierA12} \\ 
+  $(U \otimes I)W$       & $A_{12}$         & {\tt A12} \\ 
+  $-P$                   & $\tilde{A}_{21}$ & {\tt fourierA21} \\ 
+  $-P(U^{-1} \otimes I)$ & $A_{21}$         & {\tt A21} \\ 
+  $Z$                    & $\diag(D_{22})$  & {\tt A22diag}
+\end{tabular}
+\end{center}
+

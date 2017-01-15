@@ -1,0 +1,68 @@
+\subsection{{\tt DtNBC\_sparse}}
+\label{sec-DtNBC_sparse}
+
+As in the cases of {\tt dirBC\_sparse} and {\tt pmlBC\_sparse}
+objects, this one can be treated the same as its non-sparse counterpart.
+The major difference is that the user can pass a preconditioner. If none
+is passed the default (currently the Fourier preconditioner) will be used. 
+See the section on preconditioners for its derivation.
+Some of the properties are used to store things for the preconditioners.
+
+In addition to the properties and methods inherited from
+{\tt scattResComp2d\_sparse}, there is also
+\begin{description}
+ \item[Properties]
+   \begin{itemize}
+    \item[]
+    \item {\tt VvaluesVec} is a vector of potential values at the mesh points
+    \item {\tt coords} as usual
+    \item {\tt Vhat} is a matrix of potential values at the mesh points
+    \item {\tt Vav} is a vector of the average potential values on each 
+          concentric circle
+    \item {\tt A\_blks\_common} is the part of the diagonal blocks of {\tt A}
+          that is the same for all blocks
+    \item {\tt blk\_precond\_k} is the last value of $k$ used by the 
+          block diagonal preconditioner
+          (stored so we know if {\tt M\_blks} should be recomputed)
+    \item {\tt M\_blks} is a cell array where the $j$th element is a struct
+          with fields {\tt L} and {\tt U} storing the LU factorization of
+          the $j$th diagonal block of the matrix $\dtnT(k)$
+    \item {\tt blk\_fourier\_precond\_k} is the last value of $k$ used
+          by the Fourier preconditioner (stored so we know if
+          {\tt fourierM\_blks} should be recomputed)
+   \end{itemize}
+ \item[Methods]
+   \begin{itemize}
+    \item[]
+    \item {\tt apply\_T(obj,x0,k)} applies $\dtnT(k)$ to input vector
+          {\tt x0}
+    \item {\tt apply\_pc\_blkdiag(obj,x0,k)} applies $M(k)^{-1}$ to
+          input vector {\tt x0}, where $M(k)$ is the block diagonal
+          preconditioner
+    \item {\tt apply\_pc\_fourier\_Vav\_blkdiagICBC(obj,x0,k,kind)}
+          takes the fourier preconditioner $M(k)$ and applies either
+          $M(k)$ or $M(k)^{-1}$ to input vector {\tt x0}, depending
+          on whether {\tt kind} is {\tt 'mult'} or {\tt 'inv'}
+    \item {\tt apply\_pc(obj,x0,k)} applies $M(k)^{-1}$ to input
+          vector {\tt x0} where $M(k)$ is whichever preconditioner
+          has been set as the default (currently the Fourier preconditioner)
+    \item {\tt DtNcoeffs(n,k,R)}, {\tt dDtNcoeffs(n,k,R)}, 
+          {\tt d2DtNcoeffs(n,k,R)} are same as for {\tt DtNBC} object
+   \end{itemize}
+\end{description}
+
+
+Creating an instance (call it {\tt dtns}) 
+and doing a scattering computation with the default
+preconditioner, the default incident wave, and suppressing
+{\tt gmres} output looks like
+\begin{verbatim}
+ >> k = 2; // wave number
+ >> dtns = DtNBC_sparse(Nt,Nrs,Vs,coords,Rs);
+ >> scattValuesVec = dtns.solve(k);
+\end{verbatim}
+For a resonance computation, use {\tt ratApproxDtNBC\_sparse}.
+
+
+
+

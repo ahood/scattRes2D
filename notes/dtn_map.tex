@@ -1,0 +1,68 @@
+\section{The DtN map and its derivatives}
+\label{sec-dtn_map}
+
+The DtN map $f(k,R)$ is a pseudodifferential
+operator, so its action on a function $g(\theta)$ is
+computed by three steps: a) write down Fourier series
+of $g$, i.e. $\sum_{n} c_n e^{in\theta}$, b) multiply
+componentwise, i.e. $c_n \mapsto f_n(k,R)c_n$
+(where $f_n(k,R)$ is to be defined), and finally c)
+sum to get $\sum_n f_n(k,R) c_n e^{in\theta}$.
+
+The set of Hankel functions
+$\lbrace H_n^{(1)}(kr), H_n^{(2)}(kr) \rbrace_{n \in \mathbb{Z}}$
+is a basis for the kernel of $-\Delta-k^2$. 
+[Side note: $H_n^{(1)} = J_n + iY_n$ and
+$H_n^{(2)} = J_n - iY_n$.] Now, the first-kind Hankel
+functions $H_n^{(1)}(kr)$ correspond to outgoing waves.
+So, in the case where the potential is zero outside the
+disk of radius $R$, as we assume, to enforce that a 2D function
+$u(r,\theta)$ is outgoing
+at the boundary of that disk we need to impose that
+the coefficients $c_n$ of the Fourier expansion of
+$g(\theta) = u(R,\theta)$ all look like their respective
+$H_n^{(1)}(kR)$ counterparts. With a way to write down
+values and derivatives of $u$ at the mesh points, the
+DtN lets us enforce ``outgoing'' in terms of the
+relationship between them. In particular, we can actually
+write $u(r,\theta) = \sum_n c_n(r) e^{in\theta}$ ($c_n$
+is a function now), and enforce that $c_n(r) = H_n^{(1)}(kr)$
+for $r \ge R$ by
+$c_n'(R) = k \frac{\left(H_n^{(1)}\right)'(kR)}{H_n^{(1)}(kR)}       
+c_n(R)$. Let $f_n(k)$ be that ratio multiplying $c_n(R)$. It will
+be referred to as the $n$-th component of the DtN map.
+
+Due to $2H_n' = H_{n-1} - H_{n+1}$, we can write (dropping the
+superscript (1))
+\[
+ f_n(k,R) = k \frac{H_n'(kR)}{H_n(kR)}
+          = k \frac{H_{n-1}(kR)-H_{n+1}(kR)}{2H_n(kR)}.
+\]
+
+As for the derivative of $f_n(k,R)$ with respect to $k$, we get
+\begin{align*}
+ f_n'(k,R) &= \frac{H_{n-1}(kR) - H_{n+1}(kR)}{2H_n(kR)}\\ &+
+            k\frac{\Big\lbrace H_{n-1}'(kR)R-H_{n+1}'(kR)R \Big\rbrace 2H_n(kR) -
+                   \Big\lbrace H_{n-1}(kR) -H_{n+1}(kR) \Big\rbrace 2H_n'(kR)R}
+                  {4H_n(kR)^2} \\
+         &= \frac{H_{n-1}(kR) - H_{n+1}(kR)}{2H_n(kR)}\\ &+
+            kR\frac{H_{n-1}'(kR) - H_{n+1}'(kR)}{2H_n(kR)} -
+            kR\frac{H_{n-1}(kR)  - H_{n+1}(kR) }{2H_n(kR)}
+             \frac{H_n'(kR)}{H_n(kR)}.
+\end{align*}
+The first term is equal to $f_n(k,R)/k$, the
+middle term is equal to
+\[
+ kR\frac{H_{n-1}(kR)}{2H_n(kR)}\frac{H_{n-1}'(kR)}{H_{n-1}(kR)} -
+ kR\frac{H_{n+1}(kR)}{2H_n(kR)}\frac{H_{n+1}'(kR)}{H_{n+1}(kR)}
+ =
+ R\frac{H_{n-1}(kR)}{2H_n(kR)}f_{n-1}(k,R) -
+ R\frac{H_{n+1}(kR)}{2H_n(kR)}f_{n+1}(k,R),
+\]
+and the third term is equal to $Rf_n(k,R)^2/k$,
+so altogether
+\[
+ f_n'(k) = \frac{f_n(k,R)}{k}\left(1 - Rf_n(k,R)\right) +
+           R\frac{H_{n-1}(kR)f_{n-1}(k,R) - H_{n+1}(kR)f_{n+1}(k,R)}
+                 {2H_n(kR)}.
+\]

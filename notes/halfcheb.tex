@@ -1,0 +1,214 @@
+\section{``Half'' Chebyshev radial grid on $B(0,1)$ and derivative matrices}
+\label{sec-halfcheb}
+
+Ultimately we want to put a mesh on the unit disk in order
+to solve the scattering problem using spectral collocation.
+Since I'm told and I intuitively believe that having a cluster
+of mesh points near the center of the domain would be overkill,
+we don't want to put a full Chebyshev mesh on $[0,1]$. Instead,
+we can put down half of one. That's easy, but we also have to
+derive matrices which act like $\partial/\partial r$ and
+$\partial^2/\partial r^2$ at those mesh points.
+
+In the same way this is discussed in Trefethen's Spectral Methods
+in Matlab, let's first think about the situation where
+our $r,\theta$ grid consists
+of a Chebyshev mesh of $[-1,1]$ in the $r$ direction and an equally
+spaced mesh of $2N$ points in the $\theta$ direction, where
+$\theta_j = (j-1)\pi/N$, $j = 1, 2, ..., 2N$. 
+Let the Chebyshev mesh in the $r$ direction
+be split into two equal pieces $[\bar{r}; \hat{r}]$ where
+$\hat{r} = -\flipud{\bar{r}}$ is the part of the mesh on $[0,1]$
+ordered from smallest to largest. Let $D_r$ and $D_{rr}$ be the
+usual Chebyshev matrices for mapping values to derivatives at
+the mesh points of $[-1,1]$.
+
+Just as we split up the Chebyshev mesh into $[\bar{r}; \hat{r}]$,
+let's also split $D_r$ and $D_{rr}$:
+\begin{align*}
+ D_r = \left[
+       \begin{array}{c|c} E_1 & E_2 \\ \hline
+                          E_3 & E_4
+       \end{array}\right]
+ \qquad
+ D_{rr} = \left[
+       \begin{array}{c|c} D_1 & D_2 \\ \hline
+                          D_3 & D_4
+       \end{array}\right].
+\end{align*}
+Then
+\begin{align*}
+ \begin{bmatrix}
+  \psi_r(\bar{r},\theta_1) \\
+  \psi_r(\hat{r},\theta_1) \\
+    \vdots                 \\
+  \psi_r(\bar{r},\theta_N) \\
+  \psi_r(\hat{r},\theta_N) \\
+  \psi_r(\bar{r},\theta_{N+1}) \\
+  \psi_r(\hat{r},\theta_{N+1}) \\
+    \vdots                 \\
+  \psi_r(\bar{r},\theta_{2N}) \\
+  \psi_r(\hat{r},\theta_{2N})
+ \end{bmatrix}
+ =
+ \operatorname{diag}(D_r, ... , D_r)
+ \begin{bmatrix}
+  \psi(\bar{r},\theta_1) \\
+  \psi(\hat{r},\theta_1) \\
+    \vdots                 \\
+  \psi(\bar{r},\theta_N) \\
+  \psi(\hat{r},\theta_N) \\
+  \psi(\bar{r},\theta_{N+1}) \\
+  \psi(\hat{r},\theta_{N+1}) \\
+    \vdots                 \\
+  \psi(\bar{r},\theta_{2N}) \\
+  \psi(\hat{r},\theta_{2N})
+ \end{bmatrix}.
+\end{align*}
+Now, with the observation that $\psi(r,\theta) =                                                
+\psi(-r,(\theta + \pi)\mod 2\pi)$, and since
+$\theta_{j+N} = (j+N)\pi/N = \theta_j + \pi$,
+we see
+\begin{align*}
+ \psi(\bar{r},\theta_j)
+  = \psi(-\flipud{\hat{r}},\theta_j)
+  = \psi(\flipud{\hat{r}},\theta_{(j+N)\mod 2N})
+  = \flipud{\psi(\hat{r},\theta_{(j+N)\mod 2N}) }.
+\end{align*}
+Therefore, if we know what $\psi(\hat{r},\theta_j)$ is
+for all $j = 1,...,N,...,2N$, then we know what all the
+$\psi(\bar{r},\theta_j)$ are as well. Hence, the former
+are all we need to know, and we've got
+\begin{align*}
+ \begin{bmatrix}
+  \psi_r(\hat{r},\theta_1) \\
+   \vdots \\
+  \psi_r(\hat{r},\theta_N) \\
+  \psi_r(\hat{r},\theta_{N+1}) \\
+   \vdots \\
+  \psi_r(\hat{r},\theta_{2N})
+ \end{bmatrix}
+ =
+ \begin{bmatrix}
+  E_3 & E_4 &        &     &     &     &     &        &     &     \\
+      &     & \ddots &     &     &     &     &        &     &     \\
+      &     &        & E_3 & E_4 &     &     &        &     &     \\
+      &     &        &     &     & E_3 & E_4 &        &     &     \\
+      &     &        &     &     &     &     & \ddots &     &     \\
+      &     &        &     &     &     &     &        & E_3 & E_4
+ \end{bmatrix}
+ \begin{bmatrix}
+  \psi(\bar{r},\theta_1) \\
+  \psi(\hat{r},\theta_1) \\
+    \vdots                 \\
+  \psi(\bar{r},\theta_N) \\
+  \psi(\hat{r},\theta_N) \\
+  \psi(\bar{r},\theta_{N+1}) \\
+  \psi(\hat{r},\theta_{N+1}) \\
+    \vdots                 \\
+  \psi(\bar{r},\theta_{2N}) \\
+  \psi(\hat{r},\theta_{2N})
+ \end{bmatrix}.
+\end{align*}
+Since $E_3 \psi(\bar{r},\theta_j) = E_3\flipud{\psi(\hat{r},                                    
+\theta_{(j+N)\mod 2N})} = \fliplr{E_3}\psi(\hat{r},                                             
+\theta_{(j+N)\mod 2N})$, this means
+\begin{align*}
+ \begin{bmatrix}
+  \psi_r(\hat{r},\theta_1) \\
+   \vdots \\
+  \psi_r(\hat{r},\theta_N) \\
+  \psi_r(\hat{r},\theta_{N+1}) \\
+   \vdots \\
+  \psi_r(\hat{r},\theta_{2N})
+ \end{bmatrix}
+ &=
+ \begin{bmatrix}
+  \tE & E_4 &        &     &     &     &     &        &     &     \\
+      &     & \ddots &     &     &     &     &        &     &     \\
+      &     &        & \tE & E_4 &     &     &        &     &     \\
+      &     &        &     &     & \tE & E_4 &        &     &     \\
+      &     &        &     &     &     &     & \ddots &     &     \\
+      &     &        &     &     &     &     &        & \tE & E_4
+ \end{bmatrix}
+ \begin{bmatrix}
+  \psi(\hat{r},\theta_{N+1}) \\
+  \psi(\hat{r},\theta_1) \\
+    \vdots                 \\
+  \psi(\hat{r},\theta_{2N}) \\
+  \psi(\hat{r},\theta_N) \\
+  \psi(\hat{r},\theta_1) \\
+  \psi(\hat{r},\theta_{N+1}) \\
+    \vdots                 \\
+  \psi(\hat{r},\theta_N) \\
+  \psi(\hat{r},\theta_{2N})
+ \end{bmatrix} \\
+ &=
+ \underbrace{
+ \begin{bmatrix}
+  E_4 &        &     & \tE &        & \\
+      & \ddots &     &     & \ddots & \\
+      &        & E_4 &     &        & \tE \\
+  \tE &        &     & E_4 &        & \\
+      & \ddots &     &     & \ddots & \\
+      &        & \tE &     &        & E_4
+ \end{bmatrix}
+ }_{I_{2N} \otimes E_4 +                                                                        
+    \begin{bmatrix} 0 & I_N \\ I_N & 0\end{bmatrix}                                             
+    \otimes \tE}
+ \begin{bmatrix}
+  \psi(\hat{r},\theta_1) \\
+    \vdots                 \\
+  \psi(\hat{r},\theta_N) \\
+  \psi(\hat{r},\theta_{N+1}) \\
+    \vdots                 \\
+  \psi(\hat{r},\theta_{2N}) \\
+ \end{bmatrix}
+\end{align*}
+where $\fliplr{E_3} = \tE$.
+Similarly,
+\begin{align*}
+ \begin{bmatrix}
+  \psi_{rr}(\hat{r},\theta_1) \\ \vdots \\
+  \psi_{rr}(\hat{r},\theta_{2N})
+ \end{bmatrix}
+ =
+ \left( I_{2N} \otimes D_4 +
+ \begin{bmatrix} 0 & I_N \\ I_N & 0\end{bmatrix}
+ \otimes \tilde{D}_3 \right)
+ \begin{bmatrix}
+  \psi(\hat{r},\theta_1) \\ \vdots \\ \psi(\hat{r},\theta_{2N})
+ \end{bmatrix}.
+\end{align*}
+Therefore, letting $R = \operatorname{diag}(1./\hat{r})$,
+\begin{align*}
+ &\begin{bmatrix}
+  \psi_{rr}(\hat{r},\theta_1   ) + R \psi_r(\hat{r},\theta_1   ) \\
+   \vdots \\
+  \psi_{rr}(\hat{r},\theta_{2N}) + R \psi_r(\hat{r},\theta_{2N})
+ \end{bmatrix} \\
+ &=
+ \left[
+  I_{2N} \otimes D_4 +
+ \begin{bmatrix} 0 & I_N \\ I_N & 0\end{bmatrix}
+ \otimes \tilde{D}_3
+ +
+ (I_{2N} \otimes R)
+ \left(I_{2N} \otimes E_4 +
+    \begin{bmatrix} 0 & I_N \\ I_N & 0\end{bmatrix}
+    \otimes \tE\right)
+ \right]
+ \begin{bmatrix}
+  \psi(\hat{r},\theta_1) \\ \vdots \\ \psi(\hat{r},\theta_{2N})
+ \end{bmatrix} \\
+ &=
+ \left[
+  I_{2N} \otimes \left( D_4 + R E_4 \right) +
+  \begin{bmatrix} 0 & I_N \\ I_N & 0\end{bmatrix} \otimes
+  \left( \tilde{D}_3 + R \tE \right)
+ \right]
+ \begin{bmatrix}
+  \psi(\hat{r},\theta_1) \\ \vdots \\ \psi(\hat{r},\theta_{2N})
+ \end{bmatrix}.
+\end{align*}
+

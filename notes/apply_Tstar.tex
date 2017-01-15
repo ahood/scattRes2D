@@ -1,0 +1,218 @@
+\documentclass[letterpaper,12pt]{article}
+\usepackage[left=1in,right=1in,top=1in,bottom=1in]{geometry}
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{accents}
+\usepackage{verbatim}
+
+\newcommand{\bbR}{\mathbb{R}}
+\newcommand{\bbC}{\mathbb{C}}
+\newcommand{\ve}{\varepsilon}
+\newcommand{\flipud}[1]{\operatorname{flipud}(#1)}
+\newcommand{\fliplr}[1]{\operatorname{fliplr}(#1)}
+\newcommand{\tE}{\tilde{E}_3}
+\newcommand{\doublehat}[1]{\hat{\vphantom{\rule{1pt}{6.5pt}}\smash{\hat{#1}}}}
+\newcommand{\dtnA}{A^{(\text{DtN})}}
+\newcommand{\dtnB}{B^{(\text{DtN})}}
+\newcommand{\origA}{A^{(\text{orig})}}
+\newcommand{\diag}{\operatorname{diag}}
+\newcommand{\ones}{{\bf 1}}
+
+\begin{document}
+
+\subsection*{Purpose}
+
+With such huge matrices, it would be nice to solve
+the eigenvalue problems with eigs() instead of eig().
+For this I need a way of solving $T(k)x = b$ using
+a method to apply $T(k)$ rather than the matrix $T(k)$
+itself. The two options I know of are GMRES and
+the conjugate gradient method.
+
+I couldn't find a good preconditioner for solving
+$T(k)x = b$ with GMRES; the best preconditioner I could
+find still resulted in something like 2000 iterations per solve.
+This is slow for doing the solve, and completely unthinkably
+slow for finding eigenvalues with eigs().
+
+If I want to use the conjugate gradient method to solve
+$T(k)x = b$, or rather the normal equations 
+$T(k)^\ast T(k) x = T(k)^\ast b$, I need a method to 
+apply $T(k)^\ast$ instead of forming it. This document
+works that out.
+
+\subsection*{Using eigs()}
+
+Let's say $T(k) = A - E B$ and we want eigenvalues near $E_0$.
+Then 
+\begin{align*}
+ T(k)x = 0 &\Leftrightarrow \left(A-EB\right)x = 0 \\ 
+           &\Leftrightarrow \left(A - (E_0 + E-E_0)B\right)x = 0 \\           
+           &\Leftrightarrow \left(A - E_0 B\right)x - (E-E_0)Bx = 0 \\ 
+           &\Leftrightarrow T(k_0)x = (E-E_0)Bx \\ 
+           &\Leftrightarrow (E-E_0)^{-1} x = T(k_0)^{-1}Bx.
+\end{align*}
+According to the documentation for eigs() all I need is to provide a way
+of applying $T(k_0)^{-1}$ and the actual matrix $B$, but that's for the 2016
+version of Matlab, I'm back in 2014, and it was a little different. So instead
+I'll provide a method for applying $T(k_0)^{-1}B$. Applying $B$ is easy
+so I just need to worry about applying $T(k_0)^{-1}$.
+
+\subsection{Conjugate gradient method}
+
+Since $T(k_0)$ isn't self-adjoint, I have to resort to the normal equations.
+Then applying $T(k_0)^{-1}$ consists of two steps:
+\begin{enumerate}
+ \item Premultiply $T(k_0)x = b$ by $T(k_0)^\ast$ to get the normal equations
+       $T(k_0)^\ast T(k_0)x = T(k_0)^\ast b$
+ \item Solve the normal equations using the conjugate gradient method as
+       \begin{verbatim}pcg(@(x) apply_TstarT(x,k0), apply_Tstar(b,k0))
+       \end{verbatim}.
+\end{enumerate}
+
+\subsection*{How to apply $T(k)^\ast$?}
+
+As described in the manual (where it's called $T_{\text{full}}^{(\text{rat})}$),
+\[
+ T(k) = \begin{bmatrix}
+         \dtnA - k^2 \dtnB & A_{12} \\ 
+         A_{21}            & D_{22} - k^2 I
+        \end{bmatrix}
+\]
+with $A_{12} = (U \otimes I)\tilde{A}_{12}$, 
+$A_{21} = \tilde{A}_{21}(U^{-1} \otimes I)$, $D_{22}$ diagonal,
+and $\tilde{A}_{12}$,
+$\tilde{A}_{21}$ very easy to apply. For $T(k) = A - E B$ as described above,
+\begin{align*}
+ A = \begin{bmatrix} \dtnA & A_{12} \\ A_{21} & D_{22}\end{bmatrix}, \qquad
+ B = \begin{bmatrix} \dtnB & 0 \\ 0 & I\end{bmatrix}.
+\end{align*}
+Then $T(k)^\ast = A^\ast - E^\ast B^\ast$, where
+\begin{align*}
+ A^\ast = \begin{bmatrix} \left(\dtnA\right)^\ast & A_{21}^\ast \\ 
+                          A_{12}^\ast & D_{22}^\ast\end{bmatrix}, \qquad
+ B^\ast = \begin{bmatrix} \left(\dtnB\right)^\ast & 0 \\ 0 & I\end{bmatrix}.
+\end{align*}
+
+Since $\dtnB$ is just an identity with some rows zeroed,
+$\left(\dtnB\right)^\ast = \dtnB$. Since it's diagonal, $D_{22}^\ast$ is just as 
+straightforward. $\tilde{A}_{12}$ and $\tilde{A}_{21}$ consist of
+weights and ones, respectively and $\tilde{A}_{12}^T$ has the same
+shape as $\tilde{A}_{21}$ so $\tilde{A}_{12}^\ast$ and
+$\tilde{A}_{21}^\ast$ should be easy to apply. Furthermore,
+since $U^{-1} = \frac{1}{N}U^\ast$,
+$(U\otimes I)^\ast = U^\ast \otimes I = N(U^{-1} \otimes I)$ and
+$(U^{-1} \otimes I)^\ast = U^{-\ast} \otimes I = 
+\frac{1}{N}(U \otimes I)$. Therefore
+$A_{12}^\ast = N\tilde{A}_{12}^\ast (U^{-1} \otimes I)$ and
+$A_{21}^\ast = \frac{1}{N} (U \otimes I) \tilde{A}_{21}^\ast$.
+
+What $\left(\dtnA\right)^\ast$ looks like is harder to see because of the boundary
+and interface condition rows being zeroed. However, I happen to have
+handy that 
+$\dtnA = \origA + (I \otimes \operatorname{localPlacement})
+\operatorname{ArowChange}$. Since $\origA$ consists of sum of kronecker products,
+I think it should be easy to write out $\left(\origA\right)^\ast$. And
+$\operatorname{localPlacement}$ is small and sparse and
+$\operatorname{ArowChange}$ is not too big, I'm okay with saving them and
+applying them with plain old matrix multiplication (hopefully that's okay
+timewise).
+So, the easiest thing would be to do
+$\left(\dtnA\right)^\ast = \left(\origA\right)^\ast + 
+\texttt{ArowChange}^\ast (I \otimes \texttt{localPlacement}^\ast)$.
+
+Now, 
+\begin{align*}
+ \origA = -\left( I \otimes (\tilde{R}D_{r,I} + D_{rr,I}) +
+                  J \otimes (\tilde{R}D_{r,J} + D_{rr,J}) + 
+                  D_{\theta\theta} \otimes \tilde{R}^2 \right)
+        + \operatorname{diag}(\texttt{VvaluesVec}),
+\end{align*}
+so
+\begin{align*}
+ \left(\origA\right)^\ast 
+        = -\left( I \otimes (D_{r,I}^\ast \tilde{R} + D_{rr,I}^\ast) +
+                  J \otimes (D_{r,J}^\ast \tilde{R} + D_{rr,J}^\ast) + 
+                  D_{\theta\theta}^\ast \otimes \tilde{R}^2 \right)
+        + \operatorname{diag}(\texttt{VvaluesVec}^\ast),
+\end{align*}
+using the fact that $I = I^\ast$ (duh), $J = J^\ast$, and
+$\tilde{R}^\ast = \tilde{R}$. Usually also
+$\texttt{VvaluesVec}^\ast = \texttt{VvaluesVec}$. Now,
+$D_{\theta\theta}^\ast$, $D_{r,J}^\ast$, and $D_{rr,J}^\ast$
+are easy to apply because we already have a copy of 
+$D_{\theta\theta}$ around anyway, and the latter two are
+zero except their leading blocks $\texttt{E3t}$ and
+$\texttt{D3t}$, which we also have around anyway.
+
+The matrix $D_{r,I}$ is block diagonal where the leading block
+$\texttt{E4}$ is applied with matrix multiplication and the 
+rest of applied with $\texttt{chebfft()}$, and $D_{rr,I}$ is
+applied by multiplying with the saved leading block and applying
+$\texttt{chebfft()}$ twice for the rest.
+
+\subsection*{How to apply $\texttt{chebfft()}$?}
+
+First of all, we're using my version, which is a little different
+than the original from Spectral Methods in Matlab. The signature
+is $\texttt{w = chebfft(v,a,b)}$, where $v$ is length $N + 1$. Main steps:
+\begin{align*}
+ V &:= \begin{bmatrix} I_{N+1} \\ 
+      \texttt{flipud}(I_{N-1}) I_{N+1}(2:N,:)\end{bmatrix} \\ 
+ U &:= \texttt{[fft]}V \\ 
+ W &:= \texttt{[ifft]}\diag(d_W)U \\ 
+ w(1,:) &:= \left( \frac{1}{N}\ones_N^T \diag(d_1)I_{2N}(1:N,:) + 
+                   \frac{N}{2}I_{2N}(N+1,:) \right)U \\ 
+ w(2:N,:) &:= -\diag(d_2)I_{2N}(2:N,:)W \\ 
+ w(N+1,:) &:= \left( \frac{1}{N}\ones_N^T \diag(d_3)I_{2N}(1:N,:) + 
+                     \frac{N}{2} (-1)^{N+1}I_{2N}(N+1,:) \right)U
+\end{align*}
+where the $d$'s are in the code and $\texttt{[fft]}$, 
+$\texttt{[ifft]}$ represent the
+matrices applying \texttt{fft()} and \texttt{ifft()}, respectively. 
+Altogther, the main steps above give
+\begin{align*}
+ w =
+ \underbrace{ 
+ \underbrace{
+ \begin{bmatrix}
+   \frac{1}{N}\ones_N^T\diag(d_1)I_{2N}(1:N,:) +
+                   \frac{N}{2}I_{2N}(N+1,:) \\ \hline
+   -\diag(d_2)I_{2N}(2:N,:)\texttt{[ifft]}\diag(d_W) \\ \hline
+   \frac{1}{N}\ones_N^T \diag(d_3)I_{2N}(1:N,:) +
+        \frac{N}{2} (-1)^{N+1}I_{2N}(N+1,:)
+ \end{bmatrix}
+ }_M
+ \begin{bmatrix} \texttt{fft} \end{bmatrix}
+ \begin{bmatrix}
+  I_{N+1} \\ \texttt{flipud}(I_{N-1})I_{N+1}(2:N,:)
+ \end{bmatrix}
+ }_Y
+ v.
+\end{align*}
+Then there's some scaling that won't be touched by conjugation.
+The matrix $Y$ should be $N+1 \times N+1$, $M$ should be
+$N+1 \times 2N$, \texttt{[fft]} should be $2N \times 2N$, and
+the last matrix should be $2N \times N+1$.
+
+\subsection*{What does $Y^\ast$ look like?}
+
+It's easy to see
+\begin{align*}
+ Y^\ast = 
+  \begin{bmatrix} 
+   I_{N+1} & I_{N+1}(:,2:N)\texttt{flipud}(I_{N-1})
+  \end{bmatrix}
+  2N\begin{bmatrix}\texttt{ifft}\end{bmatrix}
+  M^\ast
+\end{align*}
+noting that $I(m:n,:)^T = I(:,m:n)$.
+Going by the block rows of $M$, 
+\begin{align*}
+ M^\ast(:,1) &= \frac{1}{N}I_{2N}(:,1:N)\diag(d_1^\ast)\ones_N
+              + \frac{N}{2}I_{2N}(:,N+1) \\ 
+ M^\ast(:,2:N) &= -\frac{1}{2N}\diag(d_W^\ast)\texttt{[fft]}
+                  I_{2N}(:,2:N)\diag(d_2^\ast) \\ 
+ M^\ast(:,N+1) &= \frac{1}{N}I_{2N}(:,1:N)\diag(d_3^\ast)\ones_N
+                + \frac{N}{2}(-1)^{N+1}I_{2N}(:,N+1).
+\end{align*}
+\end{document}

@@ -1,0 +1,289 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>demo_basic</title><meta name="generator" content="MATLAB 8.3"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2017-01-14"><meta name="DC.source" content="demo_basic.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#3">Define a potential</a></li><li><a href="#4">Use DtN boundary conditions to solve scattering/resonance problems</a></li><li><a href="#11">Use a rational approximation to the DtN map instead</a></li><li><a href="#17">Compute resonances</a></li></ul></div><pre class="codeinput"><span class="keyword">function</span> demo_basic
+</pre><pre class="codeinput"><span class="comment">% This demo shows how to do scattering and resonance computations using</span>
+<span class="comment">% boundary conditions involving the DtN map or a rational approximation of</span>
+<span class="comment">% same.</span>
+<span class="comment">%</span>
+<span class="comment">% The user is recommended to read the "publish"-ed version in the html</span>
+<span class="comment">% folder rather than invoking this file directly.</span>
+close <span class="string">all</span>
+addpath(<span class="string">'..'</span>)
+addpath(<span class="string">'../tests'</span>)
+</pre><h2>Define a potential<a name="3"></a></h2><p>To every potential corresponds a set of resonances we hope to find. For the purposes of demonstration we use a potential consisting of two bumps. Notice the user can choose to specify a potential function in rectangular, polar, or complex coordinates.</p><pre class="codeinput">d = 2; <span class="comment">% center-center distance</span>
+r1 = d/2; r2 = d/4; <span class="comment">% respective radii</span>
+c1 = (r1-r2)/2 - d/2;
+c2 = (r1-r2)/2 + d/2; <span class="comment">% respective centers (chosen so the smallest possible origin-centered disc encloses both)</span>
+V01 = 50; V02 = 30; <span class="comment">% respective heights</span>
+V = @(x,y) bump( sqrt((x-real(c1)).^2 + (y-imag(c1)).^2)/r1 )*V01*exp(1) + <span class="keyword">...</span>
+           bump( sqrt((x-real(c2)).^2 + (y-imag(c2)).^2)/r2 )*V02*exp(1);
+coords = <span class="string">'rect'</span>; <span class="comment">% the coordinates you just defined the potential in</span>
+</pre><h2>Use DtN boundary conditions to solve scattering/resonance problems<a name="4"></a></h2><p>Exact but nonlinear boundary condition. Great for solving scattering problems, not so useful for computing resonances.</p><p>Pick a radius at which we'll truncate our potential V (which has unbounded support, but hey, we need to pose a problem on a finite domain.)</p><pre class="codeinput">R = c2+r2;
+</pre><p>Pick a mesh of the disc of radius R. We're using a coarse mesh so this demo is fast.</p><pre class="codeinput">Nt = 10; Nr = 20;
+</pre><p>Define the object that sets up scattering and resonance problems using the DtN map. Make the mesh above finer to get a prettier picture.</p><pre class="codeinput">dtn = DtNBC(Nt,Nr,{V},coords,R);
+</pre><p>Now that we have that DtNBC instance dtn, we can plot things. Real quick let's look at the potential to make sure it's what we envisioned.</p><pre class="codeinput">figure, dtn.plotFun(V,<span class="string">'potential for DtNBC\_ratApprox\_demo'</span>,@real,coords);
+</pre><img vspace="5" hspace="5" src="demo_basic_01.png" alt=""> <p>Let's solve a scattering problem.</p><pre class="codeinput">E = 20 - 10i; <span class="comment">% energy of an incident plane wave</span>
+k = sqrt(E); <span class="comment">% wave number (in our unitless setting)</span>
+<span class="comment">% incident wave is now e^{ikx}.</span>
+dtn_scatt = dtn.solve(k); <span class="comment">% solve scattering problem with this incident wave</span>
+<span class="comment">% Note that the user can specify any incident wave; solve is overloaded.</span>
+</pre><p>Finally, let's plot the scattered wave. dtn_scatt is holding the values of the scattered wave at mesh points, a structure I refer to as a valuesVec. So we use a function to plot valuesVecs.</p><pre class="codeinput">part = @real; <span class="comment">% plot the real part, for example</span>
+figure, dtn.plotValuesVec(dtn_scatt,<span class="string">'scattered wave'</span>,part);
+</pre><img vspace="5" hspace="5" src="demo_basic_02.png" alt=""> <h2>Use a rational approximation to the DtN map instead<a name="11"></a></h2><p>The resulting inexact boundary condition isn't as good for scattering, but will let us solve the resonance problem much more easily. Note that the user must choose the region where the rational approximation is best, and thus implicitly choose where we'll be looking for resonances.</p><p>Pick an elliptical region to search for resonances. Since we already solved a scattering problem with a certain incident wave energy, let's center a region of interest at that energy.</p><pre class="codeinput">theta = 0; <span class="comment">% rotational angle</span>
+a = 10; b = 10; <span class="comment">% semi-major (a) and -minor (b) lengths</span>
+nx = 50; ny = 50; <span class="comment">% mesh for the bounding box of the ellipse (ell.bb)</span>
+ell = ellipse(E,theta,a,b,nx,ny);
+</pre><p>Define the object that sets up scattering and resonance problems using a rational approximation to the DtN map.</p><pre class="codeinput">N = 100; <span class="comment">% use this many poles in the rational approximation</span>
+rat = ratApproxDtNBC(dtn,ell,1,N);
+</pre><p>Solve the scattering problem and plot for comparison.</p><pre class="codeinput">rat_scatt = rat.solve(k);
+figure, dtn.plotValuesVec(rat_scatt);
+</pre><img vspace="5" hspace="5" src="demo_basic_03.png" alt=""> <p>Looks pretty much the same. More rigorously, we can compare the values of the computed scattered waves at the mesh points.</p><pre class="codeinput">abserr = norm(dtn_scatt - rat_scatt);
+relerr = abserr/norm(dtn_scatt);
+fprintf(<span class="string">'Error between dtn and rat scattered waves at mesh points: %4.2e, %4.2e\n'</span>, <span class="keyword">...</span>
+    abserr, relerr);
+</pre><pre class="codeoutput">Error between dtn and rat scattered waves at mesh points: 3.13e-12, 1.37e-13
+</pre><p>Recalling that the spectral collocation discretization we are using associates values on a mesh to actual functions, we can also compare the underlying scattered wave FUNCTIONS in the L2 norm.</p><pre class="codeinput"><span class="comment">% interpolate on a theta mesh that's twice as fine as the one we used for</span>
+<span class="comment">% solving the problems (and append 2*pi for convenience).</span>
+other_theta = linspace(0,2*pi,2*dtn.Nt + 1);
+[abserr, relerr, ~] = <span class="keyword">...</span>
+    L2err(dtn, dtn_scatt, dtn, rat_scatt, other_theta);
+fprintf(<span class="string">'Error between dtn and rat scattered waves in L2 norm: %4.2e, %4.2e\n'</span>, <span class="keyword">...</span>
+    abserr, relerr);
+</pre><pre class="codeoutput">Error between dtn and rat scattered waves in L2 norm: 6.52e-13, 1.36e-13
+</pre><h2>Compute resonances<a name="17"></a></h2><p>We can't compute them exactly straight-off, but we can compute approximations via the rational approximation to the DtN map.</p><p>Let's compute whatever resonances are near the center of the ellipse. This amounts to a generalized eigenvalue problem where we use eigs() behind the scenes. For this example, let's look for the 10 resonances near the center of the ellipse.</p><pre class="codeinput">[resvecs,resvals] = rat.resonances(10);
+</pre><p>Plot whatever resonances we got as well as the boundary of the ellipse. In fact, let's plot these on top of the error between the rational approximation and the DtN map.</p><pre class="codeinput">figure, hold <span class="string">on</span>
+rat.show_error(ell.bb);
+ell.draw()
+ell.bb.focus(1); <span class="comment">% add a little space between the ellipse and the figure border</span>
+plot(real(resvals),imag(resvals),<span class="string">'*b'</span>,<span class="string">'markersize'</span>,10);
+</pre><img vspace="5" hspace="5" src="demo_basic_04.png" alt=""> <p>Only one resonance in the region of interest was found. Let's make sure it is a resonance.</p><pre class="codeinput">k_res = sqrt(resvals(1));
+residual = svds( dtn.T(k_res), 1, 0);
+fprintf(<span class="string">'Residual of computed res w.r.t. exact DtN BC: %4.2e\n'</span>, residual);
+</pre><pre class="codeoutput">Residual of computed res w.r.t. exact DtN BC: 3.74e-14
+</pre><p>The rational approximation was based on the trapezoid rule applied to Cauchy's integral formula. The connection is made clear by looking at the poles of the rational approximation.</p><pre class="codeinput"><span class="keyword">for</span> j = 1:length(rat.ratf)
+    z = rat.ratf(j).z;
+    plot(real(z),imag(z),<span class="string">'*r'</span>,<span class="string">'markersize'</span>,10);
+<span class="keyword">end</span>
+</pre><img vspace="5" hspace="5" src="demo_basic_05.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+function demo_basic
+% This demo shows how to do scattering and resonance computations using
+% boundary conditions involving the DtN map or a rational approximation of
+% same. 
+%
+% The user is recommended to read the "publish"-ed version in the html
+% folder rather than invoking this file directly.
+close all
+addpath('..')
+addpath('../tests')
+
+%% Define a potential
+% To every potential corresponds a set of resonances we hope to find.
+% For the purposes of demonstration we use a potential consisting of two
+% bumps. Notice the user can choose to specify a potential function in
+% rectangular, polar, or complex coordinates.
+
+d = 2; % center-center distance
+r1 = d/2; r2 = d/4; % respective radii
+c1 = (r1-r2)/2 - d/2;
+c2 = (r1-r2)/2 + d/2; % respective centers (chosen so the smallest possible origin-centered disc encloses both)
+V01 = 50; V02 = 30; % respective heights
+V = @(x,y) bump( sqrt((x-real(c1)).^2 + (y-imag(c1)).^2)/r1 )*V01*exp(1) + ...
+           bump( sqrt((x-real(c2)).^2 + (y-imag(c2)).^2)/r2 )*V02*exp(1);
+coords = 'rect'; % the coordinates you just defined the potential in    
+
+%% Use DtN boundary conditions to solve scattering/resonance problems
+% Exact but nonlinear boundary condition. Great for solving scattering
+% problems, not so useful for computing resonances.
+
+%%
+% Pick a radius at which we'll truncate our potential V (which has
+% unbounded support, but hey, we need to pose a problem on a finite
+% domain.)
+R = c2+r2;
+
+%%
+% Pick a mesh of the disc of radius R.
+% We're using a coarse mesh so this demo is fast.
+Nt = 10; Nr = 20;
+
+%%
+% Define the object that sets up scattering and resonance problems using
+% the DtN map. Make the mesh above finer to get a prettier picture.
+dtn = DtNBC(Nt,Nr,{V},coords,R);
+
+%%
+% Now that we have that DtNBC instance dtn, we can plot things. 
+% Real quick let's look at the potential to make sure it's what we
+% envisioned.
+figure, dtn.plotFun(V,'potential for DtNBC\_ratApprox\_demo',@real,coords);
+
+%%
+% Let's solve a scattering problem.
+E = 20 - 10i; % energy of an incident plane wave
+k = sqrt(E); % wave number (in our unitless setting)
+% incident wave is now e^{ikx}.
+dtn_scatt = dtn.solve(k); % solve scattering problem with this incident wave
+% Note that the user can specify any incident wave; solve is overloaded.
+
+%%
+% Finally, let's plot the scattered wave.
+% dtn_scatt is holding the values of the scattered wave at mesh points, a
+% structure I refer to as a valuesVec. So we use a function to plot
+% valuesVecs.
+part = @real; % plot the real part, for example
+figure, dtn.plotValuesVec(dtn_scatt,'scattered wave',part);
+
+%% Use a rational approximation to the DtN map instead
+% The resulting inexact boundary condition isn't as good for scattering,
+% but will let us solve the resonance problem much more easily.
+% Note that the user must choose the region where the rational
+% approximation is best, and thus implicitly choose where we'll be looking
+% for resonances.
+
+%%
+% Pick an elliptical region to search for resonances. Since we already
+% solved a scattering problem with a certain incident wave energy, let's
+% center a region of interest at that energy.
+theta = 0; % rotational angle
+a = 10; b = 10; % semi-major (a) and -minor (b) lengths
+nx = 50; ny = 50; % mesh for the bounding box of the ellipse (ell.bb)
+ell = ellipse(E,theta,a,b,nx,ny);
+
+%%
+% Define the object that sets up scattering and resonance problems using
+% a rational approximation to the DtN map.
+N = 100; % use this many poles in the rational approximation
+rat = ratApproxDtNBC(dtn,ell,1,N);
+
+%%
+% Solve the scattering problem and plot for comparison. 
+rat_scatt = rat.solve(k);
+figure, dtn.plotValuesVec(rat_scatt);
+
+%%
+% Looks pretty much the same. More rigorously, we can compare the values of
+% the computed scattered waves at the mesh points.
+abserr = norm(dtn_scatt - rat_scatt);
+relerr = abserr/norm(dtn_scatt);
+fprintf('Error between dtn and rat scattered waves at mesh points: %4.2e, %4.2e\n', ...
+    abserr, relerr);
+
+%%
+% Recalling that the spectral collocation discretization we are using
+% associates values on a mesh to actual functions, we can also compare the
+% underlying scattered wave FUNCTIONS in the L2 norm.
+
+% interpolate on a theta mesh that's twice as fine as the one we used for
+% solving the problems (and append 2*pi for convenience).
+other_theta = linspace(0,2*pi,2*dtn.Nt + 1);
+[abserr, relerr, ~] = ...
+    L2err(dtn, dtn_scatt, dtn, rat_scatt, other_theta);
+fprintf('Error between dtn and rat scattered waves in L2 norm: %4.2e, %4.2e\n', ...
+    abserr, relerr);
+
+%% Compute resonances
+% We can't compute them exactly straight-off, but we can compute
+% approximations via the rational approximation to the DtN map.
+
+%%
+% Let's compute whatever resonances are near the center of the ellipse.
+% This amounts to a generalized eigenvalue problem where we use eigs()
+% behind the scenes. For this example, let's look for the 10 resonances
+% near the center of the ellipse.
+[resvecs,resvals] = rat.resonances(10);
+
+%%
+% Plot whatever resonances we got as well as the boundary of the ellipse.
+% In fact, let's plot these on top of the error between the rational
+% approximation and the DtN map.
+figure, hold on
+rat.show_error(ell.bb);
+ell.draw()
+ell.bb.focus(1); % add a little space between the ellipse and the figure border
+plot(real(resvals),imag(resvals),'*b','markersize',10);
+
+%%
+% Only one resonance in the region of interest was found. Let's make sure
+% it is a resonance.
+k_res = sqrt(resvals(1));
+residual = svds( dtn.T(k_res), 1, 0);
+fprintf('Residual of computed res w.r.t. exact DtN BC: %4.2e\n', residual);
+
+%%
+% The rational approximation was based on the trapezoid rule applied to
+% Cauchy's integral formula. The connection is made clear by looking at the
+% poles of the rational approximation.
+for j = 1:length(rat.ratf)
+    z = rat.ratf(j).z;
+    plot(real(z),imag(z),'*r','markersize',10);
+end
+
+##### SOURCE END #####
+--></body></html>

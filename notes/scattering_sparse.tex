@@ -1,0 +1,31 @@
+\section{The sparse versions}
+\label{sec-scattering_sparse}
+
+In the preceding sections we've discussed objects that 
+store the matrices that build the operator $T(k)$. 
+A sufficiently fine discretization will make those
+matrices too big to store. The alternative is to 
+have routines to apply the matrix $T(k)$ instead of 
+forming it, because an iterative solver will still
+allow us to solve the scattering and resonance problems.
+The sparse objects act pretty much the same way as their
+counterparts as shown in the following and detailed
+in the following sections:
+\begin{equation}
+\begin{aligned}
+ {\tt scattResComp2d} 
+ &\qquad\leftrightarrow\qquad
+ {\tt scattResComp2d\_sparse} \\ 
+ {\tt dirBC}
+ &\qquad\leftrightarrow\qquad
+ {\tt dirBC\_sparse} \\ 
+ {\tt pmlBC}
+ &\qquad\leftrightarrow\qquad
+ {\tt pmlBC\_sparse} \\ 
+ {\tt DtNBC}
+ &\qquad\leftrightarrow\qquad
+ {\tt DtNBC\_sparse}
+\end{aligned}
+\end{equation}
+
+

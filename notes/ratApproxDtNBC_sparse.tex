@@ -1,0 +1,115 @@
+\section{{\tt ratApproxDtNBC\_sparse}}
+\label{sec-ratApproxDtNBC_sparse}
+
+Besides the option to specify inputs to iterative solvers and needing to
+pass a {\tt DtNBC\_sparse} instance instead of a {\tt DtNBC} instance, the user
+can treat this object just like {\tt ratApproxDtNBC}.
+
+\subsection{Creating an instance}
+
+Since we're after resonance energies $E = k^2$ where the $k$ values are
+characterized as eigenvalues of $\dtnT$, we have to choose whether to
+make a rational approximation to $\dtnT(\sqrt{E})$ (primary branch of
+square root) or to $\dtnT(-\sqrt{E})$ (second branch). The user will pass
+1 or 2 for {\tt br} to reflect their choice. The user will also pass
+a region where the rational approximation to $\dtnT(\pm\sqrt{E})$
+will be optimized, and a {\tt DtNBC\_sparse} instance. Then creating
+an instance of {\tt ratApproxDtNBC\_sparse} looks like
+\begin{verbatim}
+ >> rats = ratApproxDtNBC_sparse(dtns,ell,br);
+\end{verbatim}
+
+\subsection{Properties and methods}
+
+\begin{description}
+ \item[Properties]
+   \begin{itemize}
+    \item[]
+    \item {\tt br} specifies a branch of the square root function, where
+          1 (the default) is the primary branch and 2 is the second branch
+    \item {\tt dtns} is a {\tt DtNBC\_sparse} instance, included so 
+          all its properties and methods can be ``inherited'' without
+          making {\tt ratApproxDtNBC\_sparse} be a child of that class 
+    \item {\tt ell} is an {\tt ellipse} instance representing where
+          the rational approximation will be good
+    \item {\tt mysqrt} is {\tt @sqrt} or {\tt -@sqrt} depending on {\tt br}
+    \item {\tt ratf} is a list of {\tt ratApproxWithPoles} instances for
+          components of DtN map
+    \item {\tt ratf\_lens} is a list of the size of each rational approximation
+          block
+    \item {\tt ratf\_ends} is a list of the row indices of the end of each
+          rational approximation block
+    \item {\tt poles} is a cell array of lists of poles 
+          within the ellipse {\tt ell} for each DtN map component
+    \item {\tt sc} is a Schur complement object that keeps track of how to
+          map $\ratT_{\text{full}}(k)$ to $\ratT(k)$
+    \item {\tt A22diag} is a vector of diagonal entries of the
+          (diagonal) 2,2 block of {\tt A}, made up of the poles of the
+          rational approximation
+    \item {\tt blk\_precond\_k} is the value of $k$ last used for the block
+          diagonal preconditioner for 
+    \item {\tt M11\_blks} is a cell array of blocks used for the block diagonal
+          preconditioner for $\ratT_{\text{full}}(k)$
+    \item {\tt blk\_fourier\_precond\_k} is the value of $k$ last used for
+          the Fourier preconditioner for $\ratT_{\text{full}}(k)$
+    \item {\tt fourierS\_blks} is a cell array of blocks used for the Fourier
+          preconditioner for $\ratT_{\text{full}}(k)$
+    \item {\tt sc\_blk\_fourier\_precond\_k} is the value of $k$ last used
+          for the Fourier preconditioner for $\ratT(k)$
+    \item {\tt sc\_fourierM\_blks} is a cell array of blocks used for the
+          Fourier preconditioner for $\ratT(k)$
+   \end{itemize}
+ \item[Methods]
+   \begin{itemize}
+    \item[]
+    \item {\tt resonances(obj,n,E0,verbose)} computes the eigenvalues of
+          the pencil $(\ratA,\ratB)$ and returns the eigenvectors and eigenvalues
+          as {\tt resvecs, resvals}, respectively
+    \item {\tt solve(obj,k,incfun,precond,verbose)} returns the vector of
+          scattered wave values on the mesh, where {\tt incfun}, {\tt precond},
+          and {\tt verbose} are optional and defaults will be used if they're
+          not passed
+    \item {\tt show\_poles(obj,r)} plots the poles of the rational approximation
+          and resizes the window to the {\tt rect} instance {\tt r}
+    \item {\tt apply\_T(obj,x0,k)} applies $\ratT(k)$ to input vector
+          {\tt x0} and returns the result
+    \item {\tt apply\_Tfull(obj,x0,k)} applies $\ratT_{\text{full}}(k)$
+          to input vector {\tt x0} and returns the result
+    \item {\tt apply\_Bfull(obj,x0)} applies $\ratB$ to input vector
+          {\tt x0} and returns the result
+    \item {\tt apply\_pc\_blkdiag(obj,x0,k)} applies $M(k)^{-1}$ to vector
+          {\tt x0} without forming it, where $M(k)$ is the block diagonal
+          preconditioner for $\ratT_{\text{full}}(k)$
+    \item {\tt apply\_pc\_fourier\_Vav\_blkdiagICBC(obj,x0,k,kind)}
+          applies $M(k)^{-1}$ to vector {\tt x0} without forming it,
+          where $M(k)$ is the Fourier preconditioner for
+          $\ratT_{\text{full}}(k)$
+    \item {\tt apply\_scpc\_fourier\_Vav\_blkdiagICBC(obj,x0,k,kind)}
+          applies $M(k)$ or $M(k)^{-1}$ (without forming)
+          to vector {\tt x0} depending on
+          whether {\tt kind} is {\tt 'mult'} or {\tt 'inv'}, where
+          $M(k)$ is the Fourier preconditioner for $\ratT(k)$
+    \item {\tt apply\_pc(obj,x0,k)} applies $M(k)^{-1}$ to
+          {\tt x0} where $M(k)$ is default preconditioner for
+          $\ratT(k)$
+    \item {\tt apply\_pc\_full(obj,x0,k)} applies $M(k)^{-1}$ to
+          {\tt x0} where $M(k)$ is default preconditioner for
+          $\ratT_{\text{full}}(k)$
+    \item {\tt apply\_fourierA12(obj,x0)}, {\tt apply\_fourierA21(obj,x0)} 
+          apply the matrices $\tilde{A}_{12}$, $\tilde{A}_{21}$ from
+          Section~\ref{sec-preconditioners}
+    \item {\tt get\_poles\_in\_range(n,region,R,br)} returns the poles
+          of the rational approximation (i.e. the poles of
+          $\ratC(\pm\sqrt{E})$, depending on {\tt br} and {\tt R}) in the region
+          represented by {\tt region}
+   \end{itemize}
+\end{description}
+
+\subsection{Computing resonances}
+
+Same as for {\tt ratApproxDtNBC}, computing the $n$ resonance energies
+closest to $E_0$ using an instance {\tt rats} of {\tt ratApproxDtNBC\_sparse}
+looks like
+\begin{verbatim}
+ >> [resvecs,resvals] = rats.resonances(n,E0);
+\end{verbatim}

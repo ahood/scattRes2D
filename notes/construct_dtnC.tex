@@ -1,0 +1,225 @@
+\section{Constructing $\dtnC(k)$}
+\label{sec-dtnC}
+
+The boundary condition is
+$\psi_r(R,\theta) = f(k)\psi(R,\theta)$ for all $\theta$, which
+we will enforce at our $\theta_j$'s.
+As shown in Section~\ref{sec-piecewise},
+it's easy to map our vector of $\psi$ values to $\psi_r$ values.
+But in order to apply the DtN map $f(k)$, we have to go to
+Fourier space.
+
+\subsection{Fourier coefficients to values with $U$}
+
+The first step is to find the mapping of Fourier coefficients to values.
+The Fourier expansion 
+$\psi(R,\theta) = \sum_{n=-\infty}^\infty \psi_n(R)e^{in\theta}$
+is an infinite sum, so for the purposes of discretization 
+it must be truncated. Since there are
+$2N$ $\theta$ mesh points, we can keep $2N$ Fourier coefficients
+$\psi_n(R)$. Due to the truncation, the following is only
+approximate, but an equals sign will be used for simplicity because that's
+how the discretization is implemented. The mapping from Fourier coefficients
+to values is then
+\begin{align*}
+ \begin{bmatrix}
+  \psi(R,\theta_1) \\ \psi(R,\theta_2) \\ \vdots \\ \psi(R,\theta_{2N})
+ \end{bmatrix}
+ =
+ \underbrace{
+ \begin{bmatrix}
+  e^{i(-N+1)\theta_1}    & e^{i(-N+2)\theta_1}    & \hdots & e^{iN\theta_1} \\
+  e^{i(-N+1)\theta_2}    & e^{i(-N+2)\theta_2}    & \hdots & e^{iN\theta_2} \\ 
+        \vdots           & \vdots                 & \ddots &      \vdots    \\
+  e^{i(-N+1)\theta_{2N}} & e^{i(-N+2)\theta_{2N}} & \hdots & e^{iN\theta_{2N}}
+ \end{bmatrix}
+ }_U
+ \begin{bmatrix}
+  \psi_{-N + 1}(R) \\ \psi_{-N+2}(R) \\ \vdots \\ \psi_{N}(R)
+ \end{bmatrix}.
+\end{align*}
+
+Keeping in mind that we'd like to be acting on vectors of values at
+all mesh points, what we really need is a map from the Fourier coefficients
+evaluated on the radial mesh, i.e.
+\begin{align*}
+ \begin{bmatrix}
+  \psi_{-N+1}(\hat{r}) \\ \psi_{-N+2}(\hat{r}) \\ \vdots \\ \psi_N(\hat{r})
+ \end{bmatrix}
+ \mapsto
+ \begin{bmatrix}
+  \psi(\hat{r},\theta_1) \\ \psi(\hat{r},\theta_2) \\ \vdots \\ 
+  \psi(\hat{r},\theta_{2N})
+ \end{bmatrix}.
+\end{align*}
+Since $U$ maps the Fourier coefficients at $r$ to values at $r$ for 
+every $r$ and not just $R$, 
+\begin{align*}
+ \begin{bmatrix}
+  \psi(\hat{r},\theta_1) \\ \psi(\hat{r},\theta_2) \\ \vdots \\ 
+  \psi(\hat{r},\theta_{2N})
+ \end{bmatrix}.
+ = 
+ \underbrace{
+ \begin{bmatrix}
+  e^{i(-N+1)\theta_1}I    & e^{i(-N+2)\theta_1}I    & \hdots & e^{iN\theta_1}I \\
+  e^{i(-N+1)\theta_2}I    & e^{i(-N+2)\theta_2}I    & \hdots & e^{iN\theta_2}I \\ 
+        \vdots            & \vdots                  & \ddots &      \vdots     \\
+  e^{i(-N+1)\theta_{2N}}I & e^{i(-N+2)\theta_{2N}}I & \hdots & e^{iN\theta_{2N}}I
+ \end{bmatrix}
+ }_{U \otimes I}
+ \begin{bmatrix}
+  \psi_{-N+1}(\hat{r}) \\ \psi_{-N+2}(\hat{r}) \\ \vdots \\ \psi_N(\hat{r})
+ \end{bmatrix}
+\end{align*}
+
+
+\subsection{Applying $U$ with the inverse DFT}
+
+Being a map from fourier coefficients to values, it's not suprising
+that this is almost an inverse discrete fourier transform. From
+Wikipedia 
+(\url{https://en.wikipedia.org/wiki/Discrete_Fourier_transform#Definition}),
+the inverse DFT maps $\lbrace X_0, X_1, ..., X_{N-1} \rbrace$
+to $\lbrace x_0, x_1, ..., x_{N-1} \rbrace$ under
+$x_n = \frac{1}{N} \sum_{k=0}^{N-1} X_k e^{2\pi i k n/N}$. In terms of
+our indexing and notation (starting indices from 1 and using $2N$ points
+instead of $N$, the DFT maps $\lbrace X_1,X_2,...,X_{2N} \rbrace$
+to $\lbrace x_1,x_2,...,x_{2N} \rbrace$ under
+$x_n = \frac{1}{2N} \sum_{k=1}^{2N} X_k e^{\pi i (k-1)(n-1)/N}$.
+Noticing that $\theta_n = (n-1)\pi/N$, the map is
+\begin{align*}
+x_n = \frac{1}{2N} \sum_{k=1}^{2N} X_k e^{i(k-1) \theta_n}.
+\end{align*}
+
+The matrix equation for the DFT in our notation is therefore
+\begin{align*}
+ \begin{bmatrix}
+  x_1 \\ x_2 \\ \vdots \\ x_{2N}
+ \end{bmatrix}
+ =
+ \frac{1}{2N} 
+ \begin{bmatrix}
+  1       & 1                & \hdots & 1 \\ 
+  1       & e^{i\theta_2}    & \hdots & e^{i(2N-1)\theta_2} \\ 
+   \vdots & \vdots           & \ddots &  \vdots \\ 
+  1       & e^{i\theta_{2N}} & \hdots & e^{i(2N-1)\theta_{2N}}
+ \end{bmatrix}
+ \begin{bmatrix}
+  X_1 \\ X_2 \\ \vdots \\ X_{2N}
+ \end{bmatrix}
+\end{align*}
+Keeping in mind that $\theta_1 = 0$, it's now clear that 
+a diagonal scaling turns that matrix into $U$:
+\begin{align*}
+ U =
+ \begin{bmatrix}
+  e^{i(-N+1)\theta_1} &                     &        & \\ 
+                      & e^{i(-N+1)\theta_2} &        & \\ 
+                      &                     & \ddots & \\ 
+                      &                     &        & e^{i(-N+1)\theta_{2N}}.
+ \end{bmatrix}
+ \begin{bmatrix}
+  1       & 1                & \hdots & 1 \\ 
+  1       & e^{i\theta_2}    & \hdots & e^{i(2N-1)\theta_2} \\ 
+   \vdots & \vdots           & \ddots &  \vdots \\ 
+  1       & e^{i\theta_{2N}} & \hdots & e^{i(2N-1)\theta_{2N}}
+ \end{bmatrix}.
+\end{align*}
+So, if $\hat{X}$ is a vector, then
+\begin{align*}
+ U\hat{X} 
+ = 2N
+  \begin{bmatrix}
+  e^{i(-N+1)\theta_1} &                     &        & \\ 
+                      & e^{i(-N+1)\theta_2} &        & \\ 
+                      &                     & \ddots & \\ 
+                      &                     &        & e^{i(-N+1)\theta_{2N}}.
+ \end{bmatrix}
+ {\tt ifft}(\hat{X})
+\end{align*}
+where {\tt ifft} is the Matlab function.
+
+\subsection{The DtN map in Fourier space}
+
+In Fourier space, the DtN map is a diagonal operator, so
+in our discretization the mapping on the Fourier coefficients
+of $\psi(R,\theta)$ is 
+\begin{align*}
+ \begin{bmatrix}
+  \psi_{-N+1}(R) \\ \psi_{-N+2}(R) \\ \vdots \\ \psi_N(R)
+ \end{bmatrix}
+ \mapsto
+ \underbrace{
+ \begin{bmatrix}
+  f_{-N+1}(k,R) &               &        & \\
+                & f_{-N+2}(k,R) &        & \\ 
+                &               & \ddots & \\ 
+                &               &        & f_N(k,R)
+ \end{bmatrix}
+ }_{\diag\left(d(k,R)\right)}
+ \begin{bmatrix}
+  \psi_{-N+1}(R) \\ \psi_{-N+2}(R) \\ \vdots \\ \psi_N(R)
+ \end{bmatrix}.
+\end{align*}
+Therefore, the action on the vector of Fourier coefficients evaluated
+on the radial mesh is
+\begin{align*}
+ \begin{bmatrix}
+  \psi_{-N+1}(\hat{r}) \\ \hline
+  \vdots \\ \hline
+  \psi_N(\hat{r})
+ \end{bmatrix}
+ \mapsto
+ \underbrace{
+ \left[
+ \begin{array}{cccc|c|cccc}
+  0 &        &   &               &        &   &        &   & \\ 
+    & \ddots &   &               &        &   &        &   & \\ 
+    &        & 0 &               &        &   &        &   & \\ 
+    &        &   & f_{-N+1}(k,R) &        &   &        &   & \\ \hline
+    &        &   &               & \ddots &   &        &   & \\ \hline
+    &        &   &               &        & 0 &        &   & \\ 
+    &        &   &               &        &   & \ddots &   & \\ 
+    &        &   &               &        &   &        & 0 & \\ 
+    &        &   &               &        &   &        &   & f_N(k,R)
+ \end{array}
+ \right]
+ }_{\diag\left(d(k,R)\right) \otimes e_ne_n^T}
+ \begin{bmatrix}
+  \psi_{-N+1}(\hat{r}) \\ \hline
+  \vdots \\ \hline
+  \psi_N(\hat{r})
+ \end{bmatrix}
+\end{align*}
+
+\subsection{The DtN map boundary condition and $\dtnC(k)$}
+
+Using the work from the previous sections, in our
+discretization the DtN map $f(k,R)$ acts like
+\begin{align*}
+ f(k,R)
+ \begin{bmatrix}
+  \psi(\hat{r},\theta_1) \\ \vdots \\ \psi(\hat{r},\theta_{2N})
+ \end{bmatrix}
+ = 
+ \underbrace{
+ (U \otimes I)
+ \left(\diag\left(d(k,R)\right) \otimes e_ne_n^T\right)(U \otimes I)^{-1}
+ }_{U\diag\left(d(k,R)\right)U^{-1} \otimes e_ne_n^T}
+ \begin{bmatrix}
+  \psi(\hat{r},\theta_1) \\ \vdots \\ \psi(\hat{r},\theta_{2N})
+ \end{bmatrix}
+\end{align*}
+
+Since the DtN map boundary condition is 
+\begin{align*}
+ \left(\partial/\partial r - f(k,R)\right)\psi = 0,
+\end{align*}
+enforcing this in the discretization involves updating
+the last row in each block of $A$ so they map to
+$\psi_r(R,\theta_j)$ for each $\theta_j$ and setting
+\begin{align*}
+ \dtnC(k) = -U\diag\left(d(k,R)\right)U^{-1} \otimes e_ne_n^T.
+\end{align*}
+

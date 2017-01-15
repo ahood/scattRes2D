@@ -1,0 +1,45 @@
+\section{Introduction}
+\label{sec-intro}
+
+The code is for quantum scattering and resonance computation
+for a class compactly-supported potentials.
+In addition to being supported
+in some disc $B(0,R)$, the potential $V$ must be smooth except possibly
+on a finite number of circles $r = r_0$. For 
+incident wave $\inc(r,\theta) = e^{ikr\cos\theta}$ with frequency
+parameter $k$, the corresponding scattered wave obeys the equation
+\begin{equation}\label{eqtn-scattprob}
+\begin{aligned}
+ \left(-\Delta + V - k^2\right)\scatt = -V\inc
+ \qquad
+ \text{on }B(0,R), \\ 
+ \text{$\scatt$ outgoing}
+ \qquad
+ \text{on }\partial B(0,R).
+\end{aligned}
+\end{equation}
+The boundary condition is enforced exactly with the Dirichlet-to-Neumann
+(DtN)
+map, approximately with a PML, and Dirichlet boundary conditions
+work pretty well under special circumstances. Therefore, the user
+can choose any of the three in order to compute $\scatt$.
+The energy of the scattered wave is $E = k^2$.
+
+The resonances are defined as the energies $E$ such that
+\begin{equation}\label{eqtn-resprob}
+\begin{aligned}
+ \left(-\Delta + V - k^2\right)\scatt = 0
+ \qquad
+ \text{on }B(0,R), \\
+ \text{$\scatt$ outgoing on }\partial B(0,R)
+\end{aligned}
+\end{equation}
+has a nonzero solution. The user can still use Dirichlet boundary conditions
+or a PML to enforce that the scattered wave is outgoing. 
+It should be noted that we won't use the
+DtN map for resonance computation, because the 
+resulting eigenvalue problem is nonlinear (and non-polynomial and
+non-rational). The user can choose to use a {\it rational approximation}
+to the DtN map instead (which leads to a rational eigenvalue problem).
+
+

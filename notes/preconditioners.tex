@@ -1,0 +1,259 @@
+\section{Preconditioners}
+\label{sec-preconditioners}
+
+For the problem posed with DtN boundary conditions,
+we're looking at the matrix $\dtnT(k) = \dtnA - k^2 \dtnB +\dtnC(k)$ where
+$\dtnC(k) = -(U \otimes I)(\operatorname{diag}(d) \otimes e_Ne_N^T)(U^{-1} \otimes I)$,
+$\dtnA$ comes from discretizing the Laplacian and $\dtnB$ is the
+identity, but with certain rows of $\dtnA$ and $\dtnB$ set to
+enforce the derivative part of
+$\psi_r(R,\theta) - f(k,R)\psi(R,\theta) = 0$ (where
+$f(k,R)$ is the DtN map described in Section~\ref{sec-dtn_map}).
+
+The diagonal and block diagonal of $\dtnT(k)$ are obvious preconditioners 
+to use for solving the scattering problem~(\ref{eqtn-defT})
+iteratively,
+and they do significantly improve the time it takes. Another
+thing we can do is take advantage of the fact that the Fourier transform
+diagonalizes the differential operator and the DtN map. 
+
+\subsection{Action of $\dtnT(k)$ in Fourier space}
+
+We already know
+that $\operatorname{diag}(d) \otimes e_Ne_N^T$ acts on vectors of the form
+$[\hat{\psi}_{-N+1}(\hat{r}), \hdots , \psi_N(\hat{r})]^T$ (i.e. the
+vector of Fourier coefficients evaluated at the radial mesh
+points; see Section~\ref{sec-dtnC}), so $(U \otimes I)$ maps
+$[\psi_{-N+1}(\hat{r}), \hdots , \psi_N(\hat{r})]^T$ to
+$[\psi(\hat{r},\theta_1), \hdots , \psi(\hat{r},\theta_{2N})]^T$
+and so all we need to do to get the action of
+$\dtnT(k)$ in Fourier space is conjugate by
+$U \otimes I$.
+
+Due to the fact that certain rows of $\dtnA$ and $\dtnB$ have been
+messed up by imposing boundary conditions, we'll get a nice
+(mostly) block preconditioner only if we ignore those changes.
+Let's call the matrices without the boundary conditions imposed
+$\widehat{\dtnA}$ and $\widehat{\dtnB}$. Then
+$\widehat{\dtnA} = -L + \operatorname{diag}(V(\hat{r},\theta_1), \hdots ,
+V(\hat{r},\theta_N))$ and $\widehat{\dtnB} = I$, where
+\begin{align*}
+L &= L_r + D_{\theta\theta} \otimes R^2 \\
+  &= I_{2N} \otimes \left({\tt Drr\_I} + R {\tt Dr\_I} \right) +
+     \underbrace{
+     \begin{bmatrix} 0 & I_N \\ I_N & 0\end{bmatrix}
+     }_{J_{2N}}
+     \otimes \left({\tt Drr\_J} + R {\tt Dr\_J} \right) +
+     D_{\theta\theta} \otimes R^2
+\end{align*}
+and $R = \operatorname{1./\hat{r}}$.
+Conjugating $L$ then yields
+\begin{align*}
+(U^{-1} \otimes I)L(U \otimes I) =
+         I_{2N}   \otimes \left({\tt Drr\_I} + R {\tt Dr\_I} \right) +
+  U^{-1} J_{2N} U \otimes \left({\tt Drr\_J} + R {\tt Dr\_J} \right) +
+  U^{-1} D_{\theta\theta} U \otimes R^2.
+\end{align*}
+Altogether we get
+\begin{align*}
+(U^{-1} \otimes I)
+(\widehat{\dtnA} &- k^2 \widehat{\dtnB} + \dtnC(k))
+(U \otimes I) = \\ 
+  & -         I_{2N}    \otimes \left({\tt Drr\_I} + R {\tt Dr\_I} \right) \\
+  & - (U^{-1} J_{2N} U) \otimes \left({\tt Drr\_J} + R {\tt Dr\_J} \right) \\
+  & - (U^{-1} D_{\theta\theta} U) \otimes R^2 \\
+  & + (U^{-1} \otimes I)\operatorname{diag}(V)(U \otimes I)
+  - k^2 I - \diag\left(d(k,R)\right) \otimes e_n e_n^T.
+\end{align*}
+By experiment,
+$U^{-1} J_{2N} U = \operatorname{diag}( (-1)^{N_s})$ and
+$U^{-1} D_{\theta\theta} U = \operatorname{diag}( -N_s^2 )$,
+where $N_s = [-N + 1 , \hdots , 0, 1, \hdots , N]$.
+The second one makes sense because
+\begin{align*}
+ \Delta\psi
+ = \sum_n \left(\psi_n''(r) + \frac{1}{r}\psi_n'(r)
+                            - \frac{n^2}{r^2}\psi_n(r)\right)e^{in\theta}
+\end{align*}
+and the $-n^2/r^2$ term corresponds to
+$\operatorname{diag}(-N_s^2) \otimes R^2$. I don't have a similar explanation
+for the first one and {\bf I haven't verified it on paper}.
+
+Anyway, using these relationships,
+\begin{align*}
+(U^{-1} \otimes I)
+(\widehat{\dtnA} &- k^2 \widehat{\dtnB} + \dtnC(k))
+(U \otimes I) = \\ 
+ &-I_{2N} \otimes \left({\tt Drr\_I} + R {\tt Dr\_I} \right) \\
+ &-\diag( (-1)^{N_s} )
+          \otimes \left({\tt Drr\_J} + R {\tt Dr\_J} \right) \\
+ &-\diag( -N_s^2 )     \otimes R^2 \\
+ &+ (U^{-1} \otimes I)\diag(V)(U \otimes I)
+  - k^2 I - \diag\left(d(k,R)\right) \otimes e_n e_n^T.
+\end{align*}
+We can approximate the $V$ term by a block diagonal thing in various ways
+(dropping off-diagonal part, or approximating the potential by
+something axisymmetric), but either way let the $j$-th block of
+the approximation be $\hat{V}_j$. Then the $j$-th block  of
+$(U^{-1} \otimes I)
+(\widehat{\dtnA} - k^2 \widehat{\dtnB} + \dtnC(k))(U \otimes I)$ is
+\begin{align*}
+ \hat{X}_j(k) &=
+ -                  \left({\tt Drr\_I} + R {\tt Dr\_I}\right)
+ -(-1)^{-N + j} \left({\tt Drr\_J} + R {\tt Dr\_J}\right) \\ 
+ &+(-N + j)^2 R^2 + \hat{V}_j - k^2 I - d(k,R)_j e_n e_n^T
+\qquad
+(j = 1,2,...,2N).
+\end{align*}
+Therefore
+\begin{align*}
+ \widehat{\dtnA} - k^2 \widehat{\dtnB} + \dtnC(k) \approx
+ (U \otimes I)\operatorname{blkdiag}(\hat{X}_1(k), \hdots , \hat{X}_N(k))
+ (U^{-1} \otimes I).
+\end{align*}
+However, without enforcing boundary conditions this matrix is not invertible,
+which is expected because enforcing boundary conditions is how we get
+a unique solution. So, now we have to consider boundary conditions.
+
+One option, simple-minded as it seems, is to take the matrix
+\begin{align*}
+ \hat{F}(k) 
+ = 
+ (U^{-1} \otimes I)
+ \left[(\dtnA - \widehat{\dtnA}) - k^2(\dtnB - \widehat{\dtnB})\right]
+ (U      \otimes I),
+\end{align*}
+which satisfies
+\begin{align*}
+ \left(\dtnA - k^2 \dtnB + \dtnC(k)\right)
+ = 
+ \left(\widehat{\dtnA} - k^2 \widehat{\dtnB} + \dtnC(k)\right)
+ + (U \otimes I)\hat{F}(k)(U^{-1} \otimes I),
+\end{align*}
+
+\subsection{Fourier preconditioner for $\dtnT(k)$}
+
+Take the block diagonal part of $\hat{F}(k)$ to make the preconditioner
+\begin{align*}
+ M(k) 
+ :&= 
+ (U \otimes I)
+ \operatorname{blkdiag}(\hat{X}_1(k),...,\hat{X}_N(k))
+ (U^{-1} \otimes I)
+ + 
+ (U \otimes I)
+ \operatorname{blkdiag}(\hat{F}_1(k),...,\hat{F}_N(k))
+ (U^{-1} \otimes I) \\ 
+ &= 
+ (U \otimes I)\hat{M}(k)(U^{-1} \otimes I) \\ 
+ &= 
+ (U \otimes I)
+ \operatorname{blkdiag}(\hat{M}_1(k),...,\hat{M}_N(k))
+ (U^{-1} \otimes I)
+ \qquad
+ \left(\hat{M}_j(k) = \hat{X}_j(k) + \hat{F}_j(k)\right)
+\end{align*}
+
+Since the $j$-th block row
+of $U^{-1} \otimes I$ is $U^{-1}(j,:) \otimes I$ and similarly for
+$U \times I$,
+\begin{align*}
+ \hat{F}_j(k)
+ = 
+ (U^{-1}(j,:) \otimes I)
+ \left[(\dtnA - \widehat{\dtnA}) - k^2(\dtnB - \widehat{\dtnB})\right]
+ (U     (:,j) \otimes I).
+\end{align*}
+We save space by realizing that 
+$(\dtnA - \widehat{\dtnA}) - k^2(\dtnB - \widehat{\dtnB})$
+is very sparse and we can write it as an outer product. Details
+omitted here, but this has been implemented and tested.
+
+%% We can enforce boundary conditions in Fourier space while still taking
+%% advantage of the block diagonal nature of the operator, though.
+%% As described in the DtN map section, if we write $\psi_{scatt} =    
+%% \sum c_n(r) e^{in\theta}$, then the boundary condition becomes       
+%% $c_n'(R) = f_n(k,R)c_n(R)$.   
+
+\subsection{Fourier preconditioner for $\ratT(k)$ and $\ratT_{\text{full}}(k)$}
+
+The Fourier preconditioner for $\ratT(k)$ is constructed the same way except
+using a rational approximation to $d(k,R)$. 
+Now,
+\begin{align*}
+ \ratT_{\text{full}}(k) 
+ = 
+ \begin{bmatrix} \dtnA - k^2 \dtnB & A_{12} \\
+                 A_{21}            & D_{22} - k^2 I
+ \end{bmatrix},
+\end{align*}
+which is pretty similar to the variable names chosen in the code.
+To reiterate, this means
+\begin{align*}
+ \ratT(k) 
+ =
+ \dtnA - k^2 \dtnB 
+ \underbrace{
+ - A_{12}(D_{22} - k^2 I)^{-1} A_{21}
+ }_{\ratC(k)}.
+\end{align*}
+It happens that $A_{12} = (U \otimes I) \tilde{A}_{12}$ and
+$A_{21} = \tilde{A}_{21}(U^{-1} \otimes I)$ 
+where the tilde matrices have very nice structure and will be very
+fast to apply (see Section~\ref{sec-rat_approx}). For convenience, let
+$\dtnA - k^2 \dtnB = (U \otimes I)\hat{Y}(k) (U^{-1} \otimes I)$,
+where $\hat{Y}$ is the block diagonal matrix with blocks
+$\hat{Y}_j(k) = \hat{M}_j(k) + \diag\left(d(k,R)\right)\otimes e_ne_n^T$.
+Then
+\begin{align*}
+ \ratT_{\text{full}}(k) =
+  \begin{bmatrix}
+   (U \otimes I)\hat{Y}(k)(U^{-1}\otimes I) &
+   (U \otimes I) \tilde{A}_{12} \\
+   \tilde{A}_{21} (U^{-1} \otimes I) &
+   D_{22} - k^2 I
+  \end{bmatrix} =
+  \begin{bmatrix}U \otimes I & 0 \\ 0 & I\end{bmatrix}
+  \begin{bmatrix}
+   \hat{Y}(k) & \tilde{A}_{12} \\
+   \tilde{A}_{21} & D_{22} - k^2 I
+  \end{bmatrix}
+  \begin{bmatrix}U^{-1} \otimes I & 0 \\ 0 & I\end{bmatrix}.
+\end{align*}
+
+Since $D_{22}$ is diagonal, we could just drop $\tilde{A}_{12}$ 
+and $\tilde{A}_{21}$
+to get a block diagonal preconditioner, but that seems wasteful.
+Consider the block 2x2 matrix inversion formula
+\begin{align*}
+ \begin{bmatrix} A & B \\ C & D\end{bmatrix}^{-1}
+ =
+ \begin{bmatrix}
+  S^{-1} & -S^{-1}BD^{-1} \\
+  -D^{-1} C S^{-1} & D^{-1} + D^{-1} C S^{-1} B D^{-1}
+ \end{bmatrix}
+\end{align*}
+where $S$ is the Schur complement $A - BD^{-1}C$.
+ Using this,
+\begin{align*}
+ &\begin{bmatrix}
+  \hat{Y}(k) & \tilde{A}_{12} \\ 
+  \tilde{A}_{21} & D_{22} - k^2 I\end{bmatrix}^{-1} \\ 
+ &=
+ \begin{bmatrix}
+  S^{-1} & -S^{-1}\tilde{A}_{12}(D_{22} - k^2 I)^{-1} \\
+  -(D_{22} - k^2 I)^{-1} \tilde{A}_{21} S^{-1} &
+  (D_{22} - k^2 I)^{-1} +
+  (D_{22} - k^2 I)^{-1} \tilde{A}_{21} S^{-1} \tilde{A}_{12}
+  (D_{22} - k^2 I)^{-1}
+ \end{bmatrix}.
+\end{align*}
+Note that here
+\begin{align*}
+ S = \hat{Y}(k) - \tilde{A}_{12} (D_{22} - k^2I)^{-1}
+      \tilde{A}_{21}
+   = (U^{-1} \otimes I)\ratT(k)(U \otimes I).
+\end{align*}
+Inverting $S$ can be done with the preconditioner we used for
+$\ratT(k)$.
+

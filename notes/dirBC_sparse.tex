@@ -1,0 +1,53 @@
+\subsection{{\tt dirBC\_sparse}}
+\label{sec-dirBC_sparse}
+
+Creation is the same as for a {\tt dirBC} instance.
+Solving the scattering problem looks the same, too, 
+except that the user can pass a preconditioner and
+a flag indicating whether GMRES output should be 
+suppressed or shown. The default preconditioner
+at the moment is the identity.
+
+A run where the default preconditioner and
+incident wave are used
+and GMRES output is shown looks like:
+\begin{verbatim}
+ >> k = 2; // wave number
+ >> dirs = dirBC_sparse(Nt,Nrs,Vs,coords,Rs);
+ >> scattValuesVec = dirs.solve(k,[],[],1);
+\end{verbatim}
+
+In addition to inherited properties and methods,
+a {\tt dirBC\_sparse} instance has the following.
+\begin{description}
+ \item[Properties]
+   \begin{itemize}
+    \item[]
+    \item {\tt VvaluesVec} is a vector of potential
+          values at the mesh points
+    \item {\tt coords} is the coordinates in which
+          the problem was specified, and can be
+          {\tt 'rect'}, {\tt 'polar'} or {\tt 'complex'}
+   \end{itemize}
+ \item[Methods]
+   \begin{itemize}
+    \item[]
+    \item {\tt apply\_T(obj,x0,k)} applies the matrix
+          $\dirT(k)$ to vector {\tt x0} without forming it
+    \item {\tt apply\_B(obj,x0,k)} applies the matrix
+          $\dirB$ to vector {\tt x0} without forming it
+    \item {\tt apply\_pc(obj,x0,k)} applies the matrix
+          $M(k)^{-1}$ to vector {\tt x0},
+          where $M(k)$ is a default
+          preconditioner (evaluated at $k$) that is
+          not explicitly formed
+    \item {\tt eig\_comp(obj,n,E0,verbose)} computes
+          the {\tt n} eigenvalues of $(\dirA,\dirB)$ closest
+          to complex number {\tt E0} and returns 
+          them and their eigenvectors as
+          {\tt evecs,evals} (optional last argument
+          {\tt verbose} should be set to 1 to see
+          output of {\tt gmres} )           
+   \end{itemize}
+\end{description}
+
